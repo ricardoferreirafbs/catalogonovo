@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0a0a09">
+    <meta name="description" content="Catálogo visual dinâmico de Ricardo Ferreira Official.">
+    <meta property="og:title" content="Ricardo Ferreira — Visual Archive">
+    <meta property="og:description" content="Um arquivo vivo de imagens, movimento e presença.">
+    <meta property="og:image" content="og.png">
+    <title>Ricardo Ferreira — Visual Archive</title>
+    <link rel="icon" href="favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="RF Studio — início">
+        <span class="brand__mark">RF</span>
+        <span class="brand__copy">
+          <strong>Ricardo Ferreira</strong>
+          <small>visual archive</small>
+        </span>
+      </a>
+
+      <button class="menu-button" type="button" aria-label="Abrir menu" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+
+      <nav class="nav" aria-label="Navegação principal">
+        <a href="#catalogo">Catálogo</a>
+        <a href="https://www.instagram.com/ricardoferreira_official/" target="_blank" rel="noreferrer">
+          Instagram ↗
+        </a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero" id="inicio">
+        <div class="hero__kicker">
+          <span class="live-dot"></span>
+          arquivo em atualização
+        </div>
+        <h1>Momentos que <em>merecem espaço.</em></h1>
+        <div class="hero__bottom">
+          <p>
+            Um recorte vivo do trabalho de <strong>@ricardoferreira_official</strong>,
+            organizado para descobrir, observar e revisitar.
+          </p>
+          <a class="round-link" href="#catalogo" aria-label="Ver catálogo">↓</a>
+        </div>
+        <span class="hero__number" aria-hidden="true">01</span>
+      </section>
+
+      <section class="catalog" id="catalogo">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Seleção recente</span>
+            <h2>Catálogo</h2>
+          </div>
+          <div class="sync">
+            <span id="sync-status" aria-live="polite">Conectando ao arquivo</span>
+            <button id="refresh-button" type="button">
+              <span class="refresh-icon">↻</span>
+              <span class="refresh-label">Atualizar</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-row">
+          <div class="filters" role="group" aria-label="Filtrar catálogo">
+            <button class="is-active" type="button" data-filter="ALL">Todos</button>
+            <button type="button" data-filter="IMAGE">Fotos</button>
+            <button type="button" data-filter="VIDEO">Vídeos</button>
+          </div>
+          <span class="item-count" id="item-count">00 itens</span>
+        </div>
+
+        <aside class="notice" id="notice" hidden>
+          <span>Feed local ativo</span>
+          <p>O catálogo está usando o arquivo feed.json. O conector do Instagram pode ser ativado no servidor.</p>
+        </aside>
+
+        <div class="loading-grid" id="loading-grid" aria-label="Carregando catálogo">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+
+        <div class="media-grid" id="media-grid" aria-live="polite"></div>
+        <p class="empty-state" id="empty-state" hidden>Nenhuma publicação encontrada neste filtro.</p>
+      </section>
+
+      <section class="manifesto">
+        <span>Arquivo vivo — <span id="current-year"></span></span>
+        <p>Imagem não é só registro.</p>
+        <h2>É presença.</h2>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-brand">RF<sup>®</sup></div>
+      <div>
+        <p>Ricardo Ferreira Official</p>
+        <a href="https://www.instagram.com/ricardoferreira_official/" target="_blank" rel="noreferrer">
+          Seguir no Instagram ↗
+        </a>
+      </div>
+      <small>Catálogo sincronizado automaticamente</small>
+    </footer>
+
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Visualizar publicação" hidden>
+      <button class="lightbox__backdrop" type="button" data-close aria-label="Fechar"></button>
+      <div class="lightbox__content">
+        <button class="lightbox__close" type="button" data-close aria-label="Fechar">×</button>
+        <div class="lightbox__media" id="lightbox-media"></div>
+        <div class="lightbox__copy">
+          <span id="lightbox-date"></span>
+          <p id="lightbox-caption"></p>
+          <a id="lightbox-link" href="#" target="_blank" rel="noreferrer">Ver publicação original ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <noscript>
+      <p class="noscript">Ative o JavaScript para visualizar e atualizar o catálogo.</p>
+    </noscript>
+  </body>
+</html>

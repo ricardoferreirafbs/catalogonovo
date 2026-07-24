@@ -1,0 +1,32 @@
+RICARDO FERREIRA — CATÁLOGO HTML/CSS
+=====================================
+
+ARQUIVOS PRINCIPAIS
+
+index.html      Estrutura do site
+styles.css      Layout, responsividade e animações
+app.js          Filtros, modal e atualização automática
+feed.json       Catálogo local/fallback
+api/instagram.php  Conector opcional com a API do Instagram
+
+PUBLICAÇÃO SIMPLES
+
+1. Envie todos os arquivos e pastas para public_html, www ou a pasta pública
+   da sua hospedagem.
+2. Acesse o domínio. Sem configuração adicional, o site usará feed.json.
+3. Para trocar imagens manualmente, edite os itens de feed.json.
+
+ATUALIZAÇÃO AUTOMÁTICA PELO INSTAGRAM
+
+1. A hospedagem precisa oferecer PHP com a extensão cURL.
+2. No painel da hospedagem, cadastre INSTAGRAM_ACCESS_TOKEN como variável de
+   ambiente protegida. Não escreva o token em app.js, index.html ou feed.json.
+3. O site tentará consultar api/instagram.php. Se a integração estiver
+   indisponível, usará feed.json automaticamente.
+4. O catálogo verifica novas publicações a cada 60 segundos enquanto a página
+   está aberta e também possui um botão Atualizar.
+
+IMPORTANTE
+
+HTML e CSS puros não podem proteger uma credencial do Instagram. Por isso, o
+conector PHP é opcional e mantém o token somente no servidor.
