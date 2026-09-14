@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 720" role="img" aria-labelledby="title description">
+  <title id="title">Produto sem fotografia</title>
+  <description id="description">Composição abstrata em verde e laranja</description>
+  <rect width="900" height="720" fill="#e9eee9"/>
+  <circle cx="710" cy="155" r="175" fill="#d9e5dc"/>
+  <path d="M120 540c105-180 235-266 390-258 91 5 179 42 270 113v205H120Z" fill="#173f35" opacity=".92"/>
+  <path d="M330 554c21-145 82-253 184-324 44 89 47 198 10 324Z" fill="#e48a4a"/>
+  <rect x="120" y="600" width="660" height="8" rx="4" fill="#b8c9bd"/>
+</svg>
