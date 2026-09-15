@@ -45,7 +45,7 @@ class TenantController extends Controller
         $data = $this->validated($request);
 
         $tenant = DB::transaction(function () use ($data) {
-            $tenant = Tenant::create($this->tenantData($data));
+            $tenant = Tenant::create(array_merge($this->tenantData($data), ['theme' => Tenant::defaultTheme()]));
             $tenant->users()->create([
                 'name' => $data['admin_name'],
                 'email' => strtolower($data['admin_email']),

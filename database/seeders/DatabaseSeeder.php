@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Aurora Casa', 'status' => 'active', 'plan' => 'professional',
                 'contact_phone' => '5511999999999',
                 'theme' => [
-                    'primary' => '#173f35', 'accent' => '#e48a4a', 'surface' => '#f4f6f3',
+                    ...Tenant::TEMPLATE_PALETTES['classic'],
+                    'template' => 'classic',
                     'hero_title' => 'Peças que dão ritmo à sua casa.',
                     'hero_text' => 'Uma seleção de objetos funcionais, materiais honestos e acabamento cuidadoso.',
                     'font_style' => 'modern', 'card_style' => 'soft',

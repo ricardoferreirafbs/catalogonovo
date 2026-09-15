@@ -8,11 +8,28 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Tenant extends Model
 {
+    public const TEMPLATE_PALETTES = [
+        'mimo' => ['primary' => '#7C2944', 'accent' => '#D79A9B', 'surface' => '#FFF9F5', 'dark' => '#572235'],
+        'accesso' => ['primary' => '#3478D4', 'accent' => '#FFD51F', 'surface' => '#FBFAF6', 'dark' => '#111A35'],
+        'classic' => ['primary' => '#173F35', 'accent' => '#E48A4A', 'surface' => '#F4F6F3', 'dark' => '#14231F'],
+    ];
+
     protected $fillable = ['name', 'slug', 'custom_domain', 'status', 'plan', 'contact_phone', 'logo_path', 'hero_image_path', 'hero_image_2_path', 'hero_image_3_path', 'experience_image_path', 'theme', 'content'];
 
     protected function casts(): array
     {
         return ['theme' => 'array', 'content' => 'array'];
+    }
+
+    public static function defaultTheme(): array
+    {
+        return array_merge(self::TEMPLATE_PALETTES['classic'], [
+            'template' => 'classic',
+            'hero_title' => 'Conheça nossa coleção.',
+            'hero_text' => 'Produtos selecionados e atendimento próximo.',
+            'font_style' => 'modern',
+            'card_style' => 'soft',
+        ]);
     }
 
     public function users(): HasMany

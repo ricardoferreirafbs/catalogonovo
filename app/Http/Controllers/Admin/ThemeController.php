@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -12,7 +13,10 @@ class ThemeController extends Controller
     {
         $tenant = auth()->user()->tenant;
 
-        return view('admin.theme', compact('tenant'));
+        return view('admin.theme', [
+            'tenant' => $tenant,
+            'palettes' => Tenant::TEMPLATE_PALETTES,
+        ]);
     }
 
     public function update(Request $request)
@@ -29,7 +33,7 @@ class ThemeController extends Controller
             'card_style' => ['required', Rule::in(['soft', 'square', 'outline'])],
         ]);
         $data['template'] ??= 'classic';
-        $data['dark'] ??= '#111a35';
+        $data['dark'] ??= Tenant::TEMPLATE_PALETTES[$data['template']]['dark'];
         $tenant = auth()->user()->tenant;
         $tenant->update(['theme' => $data]);
 

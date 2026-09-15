@@ -153,6 +153,29 @@ class CatalogPlatformTest extends TestCase
         $this->actingAs($user)->get(route('admin.theme.edit'))->assertOk()->assertSee('Aurora')->assertSee('Vértice')->assertSee('Nítido');
     }
 
+    public function test_appearance_editor_exposes_original_palettes_and_realistic_preview(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+
+        $this->actingAs($user)->get(route('admin.theme.edit'))
+            ->assertOk()
+            ->assertSee('#7C2944')
+            ->assertSee('#3478D4')
+            ->assertSee('#173F35')
+            ->assertSee('Restaurar cores originais')
+            ->assertSee('preview-art-mimo')
+            ->assertSee('preview-art-accesso')
+            ->assertSee('preview-art-classic');
+    }
+
+    public function test_new_tenant_created_in_platform_receives_the_default_template_palette(): void
+    {
+        $this->assertSame('#173F35', Tenant::defaultTheme()['primary']);
+        $this->assertSame('#14231F', Tenant::defaultTheme()['dark']);
+        $this->assertSame('classic', Tenant::defaultTheme()['template']);
+    }
+
     public function test_mimo_template_renders_its_editable_sections(): void
     {
         $tenant = Tenant::create([

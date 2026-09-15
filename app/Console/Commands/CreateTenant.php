@@ -55,12 +55,7 @@ class CreateTenant extends Command
                     'slug' => $slug,
                     'custom_domain' => $domain,
                     'plan' => $this->option('plan'),
-                    'theme' => [
-                        'primary' => '#173f35', 'accent' => '#e48a4a', 'surface' => '#f4f6f3',
-                        'hero_title' => 'Conheça nossa coleção.',
-                        'hero_text' => 'Produtos selecionados e atendimento próximo.',
-                        'font_style' => 'modern', 'card_style' => 'soft',
-                    ],
+                    'theme' => Tenant::defaultTheme(),
                 ]);
                 User::create([
                     'tenant_id' => $tenant->id,
