@@ -150,7 +150,7 @@ class CatalogPlatformTest extends TestCase
 
         $this->actingAs($user)->get(route('admin.categories.index'))->assertOk()->assertSee('Até quatro níveis');
         $this->actingAs($user)->get(route('admin.content.edit'))->assertOk()->assertSee('Editor de todas as áreas');
-        $this->actingAs($user)->get(route('admin.theme.edit'))->assertOk()->assertSee('Editorial Acesso');
+        $this->actingAs($user)->get(route('admin.theme.edit'))->assertOk()->assertSee('Aurora')->assertSee('Vértice')->assertSee('Nítido');
     }
 
     public function test_mimo_template_renders_its_editable_sections(): void
