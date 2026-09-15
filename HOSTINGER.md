@@ -2,6 +2,8 @@
 
 > **Tipo de aplicação:** este repositório é uma aplicação PHP/Laravel. No hPanel, crie um site **Custom PHP/HTML** e conecte o GitHub em **Avançado → Git**. Não use a opção “Node.js Web App”: o Node/Vite serve apenas para compilar os arquivos visuais e não é o servidor da aplicação.
 
+Os recursos de produção em `public/build` já estão versionados para que o deploy Web/Cloud não precise executar o Vite. O `.htaccess` da raiz encaminha as requisições para `public/`, conforme o modelo recomendado pela Hostinger para hospedagens cujo document root é fixo em `public_html`.
+
 ## Plano indicado
 
 Para operar como SaaS, use uma **VPS Hostinger**. O catálogo pode rodar em hospedagem Web/Cloud, mas a VPS é a opção adequada para:
