@@ -68,4 +68,24 @@ class CatalogPlatformTest extends TestCase
         $this->assertSame('#173f35', $tenant->fresh()->theme['primary']);
         $this->assertSame('#000000', $other->fresh()->theme['primary']);
     }
+
+    public function test_tenant_creation_reports_an_existing_domain_without_throwing_an_exception(): void
+    {
+        Tenant::create([
+            'name' => 'Empresa existente',
+            'slug' => 'empresa-existente',
+            'custom_domain' => 'catalogo.exemplo.com.br',
+        ]);
+
+        $this->artisan('tenant:create', [
+            'name' => 'Nova empresa',
+            'email' => 'admin@nova.test',
+            '--slug' => 'nova-empresa',
+            '--domain' => 'CATALOGO.EXEMPLO.COM.BR',
+        ])
+            ->expectsOutputToContain('já está vinculado')
+            ->assertFailed();
+
+        $this->assertDatabaseMissing('tenants', ['slug' => 'nova-empresa']);
+    }
 }
