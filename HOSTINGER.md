@@ -68,7 +68,7 @@ DB_PASSWORD=senha_forte
 SESSION_DRIVER=database
 QUEUE_CONNECTION=database
 CACHE_STORE=database
-FILESYSTEM_DISK=public
+FILESYSTEM_DISK=uploads
 ```
 
 ## Primeiro deploy
@@ -79,11 +79,12 @@ npm ci
 npm run build
 php artisan key:generate
 php artisan migrate --force
-php artisan storage:link
 php artisan optimize
 ```
 
-Depois, dê acesso de escrita ao usuário do PHP-FPM somente em `storage` e `bootstrap/cache`.
+As imagens são gravadas diretamente em `public/uploads`, pois hospedagens compartilhadas podem bloquear a função PHP `exec()` usada pelo `storage:link`. Não execute `php artisan storage:link`.
+
+Depois, dê acesso de escrita ao usuário do PHP somente em `storage`, `bootstrap/cache` e `public/uploads`.
 
 Configure o worker usando `deploy/hostinger-queue.conf` e recarregue o Supervisor. Adicione também um cron executado a cada minuto:
 

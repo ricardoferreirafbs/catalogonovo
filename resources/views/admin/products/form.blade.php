@@ -28,7 +28,7 @@
         <aside class="panel-card media-panel">
             <div><p class="eyebrow">Imagem principal</p><h2>Apresentação</h2></div>
             <div class="image-preview" id="image-preview">
-                <img src="{{ $product->media->first() ? Storage::disk('public')->url($product->media->first()->path) : asset('images/product-placeholder.svg') }}" alt="Prévia do produto">
+                <img src="{{ $product->media->first() ? Storage::disk('uploads')->url($product->media->first()->path) : asset('images/product-placeholder.svg') }}" alt="Prévia do produto">
             </div>
             <label class="upload-field">Selecionar foto<input id="image-input" type="file" name="image" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG ou WebP · até 4 MB</small></label>
             <div class="form-actions"><a href="{{ route('admin.products.index') }}">Cancelar</a><button type="submit" class="primary-button">{{ $product->exists ? 'Salvar alterações' : 'Criar produto' }}</button></div>

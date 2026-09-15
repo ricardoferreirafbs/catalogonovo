@@ -33,7 +33,7 @@ class CatalogController extends Controller
                 'featured' => $product->featured,
                 'stock_label' => $product->stock_label,
                 'image' => $product->media->first()
-                    ? Storage::disk('public')->url($product->media->first()->path)
+                    ? Storage::disk('uploads')->url($product->media->first()->path)
                     : asset('images/product-placeholder.svg'),
                 'url' => route('catalog.product', $product->slug),
             ]);

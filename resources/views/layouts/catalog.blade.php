@@ -20,7 +20,7 @@
     <header class="catalog-header container">
         <a href="{{ route('catalog.index') }}" class="brand" aria-label="Página inicial de {{ $tenant->name }}">
             @if($tenant->logo_path)
-                <img src="{{ Storage::disk('public')->url($tenant->logo_path) }}" alt="{{ $tenant->name }}">
+                <img src="{{ Storage::disk('uploads')->url($tenant->logo_path) }}" alt="{{ $tenant->name }}">
             @else
                 <span class="brand-mark">{{ mb_substr($tenant->name, 0, 1) }}</span>
                 <span>{{ $tenant->name }}</span>

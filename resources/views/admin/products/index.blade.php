@@ -9,7 +9,7 @@
         <div class="product-admin-list">
             @forelse($products as $product)
                 <article class="product-admin-row">
-                    <img src="{{ $product->media->first() ? Storage::disk('public')->url($product->media->first()->path) : asset('images/product-placeholder.svg') }}" alt="">
+                    <img src="{{ $product->media->first() ? Storage::disk('uploads')->url($product->media->first()->path) : asset('images/product-placeholder.svg') }}" alt="">
                     <div class="item-main"><strong>{{ $product->name }}</strong><small>{{ $product->category?->name ?? 'Sem categoria' }} · {{ $product->sku ?: 'Sem código' }}</small></div>
                     <div class="admin-price">{{ $product->current_price ? 'R$ '.number_format($product->current_price, 2, ',', '.') : 'Sob consulta' }}</div>
                     <span class="status {{ $product->status }}">{{ $product->status === 'published' ? 'Publicado' : 'Rascunho' }}</span>

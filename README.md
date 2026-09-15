@@ -39,11 +39,12 @@ Em seguida:
 
 ```bash
 php artisan migrate --seed
-php artisan storage:link
 npm ci
 npm run build
 php artisan serve
 ```
+
+As imagens são gravadas diretamente em `public/uploads`; nenhum link simbólico ou comando `storage:link` é necessário.
 
 Catálogo: `http://127.0.0.1:8000`
 

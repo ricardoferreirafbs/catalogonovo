@@ -5,7 +5,7 @@
         <a href="{{ route('catalog.index') }}" class="back-link">← Voltar ao catálogo</a>
         <div class="product-detail-grid">
             <div class="product-detail-media">
-                <img src="{{ $product->media->first() ? Storage::disk('public')->url($product->media->first()->path) : asset('images/product-placeholder.svg') }}" alt="{{ $product->name }}">
+                <img src="{{ $product->media->first() ? Storage::disk('uploads')->url($product->media->first()->path) : asset('images/product-placeholder.svg') }}" alt="{{ $product->name }}">
             </div>
             <div class="product-detail-copy">
                 <p class="eyebrow">{{ $product->category?->name ?? 'Produto' }} @if($product->sku) · {{ $product->sku }} @endif</p>

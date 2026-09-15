@@ -64,7 +64,7 @@ class ProductController extends Controller
     {
         $this->authorizeTenant($product);
         foreach ($product->media as $media) {
-            Storage::disk('public')->delete($media->path);
+            Storage::disk('uploads')->delete($media->path);
         }
         $product->delete();
 
@@ -95,10 +95,10 @@ class ProductController extends Controller
         }
 
         foreach ($product->media as $media) {
-            Storage::disk('public')->delete($media->path);
+            Storage::disk('uploads')->delete($media->path);
             $media->delete();
         }
-        $path = $request->file('image')->store("tenants/{$product->tenant_id}/products", 'public');
+        $path = $request->file('image')->store("tenants/{$product->tenant_id}/products", 'uploads');
         $product->media()->create(['path' => $path, 'alt_text' => $product->name]);
     }
 
