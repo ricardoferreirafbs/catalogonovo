@@ -17,7 +17,7 @@ Plataforma multiempresa para publicar catálogos personalizados mantendo um úni
 
 - PHP 8.2 ou superior, com extensões comuns do Laravel e MySQL.
 - Composer 2.
-- Node.js 20 ou superior e pnpm ou npm.
+- Node.js 20 ou superior e npm.
 - MySQL 8 recomendado.
 
 ## Início local
@@ -40,8 +40,8 @@ Em seguida:
 ```bash
 php artisan migrate --seed
 php artisan storage:link
-pnpm install
-pnpm run build
+npm ci
+npm run build
 php artisan serve
 ```
 
@@ -68,7 +68,7 @@ O comando solicita a senha sem exibi-la no terminal. A partir daí, o catálogo 
 
 ```bash
 php artisan test
-pnpm run build
+npm run build
 php artisan optimize
 ```
 

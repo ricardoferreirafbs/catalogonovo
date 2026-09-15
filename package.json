@@ -1,5 +1,6 @@
 {
     "$schema": "https://www.schemastore.org/package.json",
+    "name": "catalogo-saas",
     "private": true,
     "type": "module",
     "scripts": {

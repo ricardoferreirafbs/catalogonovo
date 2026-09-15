@@ -1,5 +1,7 @@
 # Implantação na Hostinger
 
+> **Tipo de aplicação:** este repositório é uma aplicação PHP/Laravel. No hPanel, crie um site **Custom PHP/HTML** e conecte o GitHub em **Avançado → Git**. Não use a opção “Node.js Web App”: o Node/Vite serve apenas para compilar os arquivos visuais e não é o servidor da aplicação.
+
 ## Plano indicado
 
 Para operar como SaaS, use uma **VPS Hostinger**. O catálogo pode rodar em hospedagem Web/Cloud, mas a VPS é a opção adequada para:
@@ -71,9 +73,8 @@ FILESYSTEM_DISK=public
 
 ```bash
 composer install --no-dev --optimize-autoloader
-corepack enable
-pnpm install --frozen-lockfile
-pnpm run build
+npm ci
+npm run build
 php artisan key:generate
 php artisan migrate --force
 php artisan storage:link
@@ -96,9 +97,8 @@ Em cada nova versão:
 php artisan down --retry=30
 git pull --ff-only
 composer install --no-dev --optimize-autoloader
-corepack enable
-pnpm install --frozen-lockfile
-pnpm run build
+npm ci
+npm run build
 php artisan migrate --force
 php artisan optimize
 php artisan queue:restart
