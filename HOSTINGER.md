@@ -86,6 +86,8 @@ As imagens são gravadas diretamente em `public/uploads`, pois hospedagens compa
 
 Depois, dê acesso de escrita ao usuário do PHP somente em `storage`, `bootstrap/cache` e `public/uploads`.
 
+As pastas temporárias obrigatórias do Laravel já estão incluídas no repositório. Se uma instalação antiga exibir `View path not found`, atualize o projeto pelo Git antes de executar novamente `php artisan optimize:clear`.
+
 Configure o worker usando `deploy/hostinger-queue.conf` e recarregue o Supervisor. Adicione também um cron executado a cada minuto:
 
 ```cron
