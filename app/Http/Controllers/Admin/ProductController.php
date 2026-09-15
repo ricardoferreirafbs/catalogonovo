@@ -22,7 +22,7 @@ class ProductController extends Controller
     public function create()
     {
         $tenant = auth()->user()->tenant;
-        $categories = $tenant->categories()->orderBy('sort_order')->get();
+        $categories = $tenant->categories()->with('parent.parent.parent')->orderBy('sort_order')->get();
 
         return view('admin.products.form', ['product' => new Product, 'categories' => $categories]);
     }
@@ -43,7 +43,7 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $this->authorizeTenant($product);
-        $categories = auth()->user()->tenant->categories()->orderBy('sort_order')->get();
+        $categories = auth()->user()->tenant->categories()->with('parent.parent.parent')->orderBy('sort_order')->get();
 
         return view('admin.products.form', compact('product', 'categories'));
     }

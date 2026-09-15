@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Tenant extends Model
 {
-    protected $fillable = ['name', 'slug', 'custom_domain', 'status', 'plan', 'contact_phone', 'logo_path', 'theme'];
+    protected $fillable = ['name', 'slug', 'custom_domain', 'status', 'plan', 'contact_phone', 'logo_path', 'hero_image_path', 'theme', 'content'];
 
     protected function casts(): array
     {
-        return ['theme' => 'array'];
+        return ['theme' => 'array', 'content' => 'array'];
     }
 
     public function users(): HasMany
@@ -30,9 +30,19 @@ class Tenant extends Model
         return $this->hasMany(Product::class);
     }
 
+    public function menuItems(): HasMany
+    {
+        return $this->hasMany(MenuItem::class);
+    }
+
     public function themeValue(string $key, string $fallback): string
     {
         return (string) data_get($this->theme, $key, $fallback);
+    }
+
+    public function contentValue(string $key, mixed $fallback = ''): mixed
+    {
+        return data_get($this->content, $key, $fallback);
     }
 
     public function catalogUrl(): string

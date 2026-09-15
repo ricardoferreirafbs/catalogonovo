@@ -88,4 +88,68 @@ class CatalogPlatformTest extends TestCase
 
         $this->assertDatabaseMissing('tenants', ['slug' => 'nova-empresa']);
     }
+
+    public function test_category_hierarchy_is_limited_to_four_levels(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $level1 = Category::create(['tenant_id' => $tenant->id, 'name' => 'Nível 1', 'slug' => 'nivel-1']);
+        $level2 = Category::create(['tenant_id' => $tenant->id, 'parent_id' => $level1->id, 'name' => 'Nível 2', 'slug' => 'nivel-2']);
+        $level3 = Category::create(['tenant_id' => $tenant->id, 'parent_id' => $level2->id, 'name' => 'Nível 3', 'slug' => 'nivel-3']);
+        $level4 = Category::create(['tenant_id' => $tenant->id, 'parent_id' => $level3->id, 'name' => 'Nível 4', 'slug' => 'nivel-4']);
+
+        $this->actingAs($user)->post(route('admin.categories.store'), [
+            'name' => 'Nível 5', 'parent_id' => $level4->id, 'is_active' => 1,
+        ])->assertSessionHasErrors('parent_id');
+
+        $this->assertDatabaseMissing('categories', ['tenant_id' => $tenant->id, 'name' => 'Nível 5']);
+    }
+
+    public function test_tenant_user_can_publish_a_category_as_main_menu(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+
+        $this->actingAs($user)->post(route('admin.categories.store'), [
+            'name' => 'Coleções', 'is_active' => 1, 'show_in_menu' => 1,
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('categories', ['tenant_id' => $tenant->id, 'slug' => 'colecoes', 'show_in_menu' => true]);
+    }
+
+    public function test_content_editor_updates_only_the_authenticated_tenant(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente A', 'slug' => 'cliente-a']);
+        $other = Tenant::create(['name' => 'Cliente B', 'slug' => 'cliente-b', 'content' => ['hero_title' => 'Original B']]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+
+        $this->actingAs($user)->put(route('admin.content.update'), [
+            'hero_title' => 'Nova capa do Cliente A', 'hero_text' => 'Texto personalizado.', 'show_stats' => 1,
+        ])->assertRedirect();
+
+        $this->assertSame('Nova capa do Cliente A', $tenant->fresh()->content['hero_title']);
+        $this->assertSame('Original B', $other->fresh()->content['hero_title']);
+    }
+
+    public function test_accesso_template_renders_editable_sections(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Editorial', 'slug' => 'aurora', 'custom_domain' => 'editorial.catalogos.test', 'theme' => ['template' => 'accesso'],
+            'content' => ['hero_title' => 'Título totalmente editável', 'experience_title' => 'Experiência personalizada'],
+        ]);
+
+        $this->withServerVariables(['HTTP_HOST' => 'editorial.catalogos.test'])->get('/')
+            ->assertOk()->assertSee('template-accesso')->assertSee('Título totalmente editável')->assertSee('Experiência personalizada');
+    }
+
+    public function test_catalog_builder_pages_are_available_to_tenant_users(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        Category::create(['tenant_id' => $tenant->id, 'name' => 'Principal', 'slug' => 'principal', 'show_in_menu' => true]);
+
+        $this->actingAs($user)->get(route('admin.categories.index'))->assertOk()->assertSee('Até quatro níveis');
+        $this->actingAs($user)->get(route('admin.content.edit'))->assertOk()->assertSee('Editor de todas as áreas');
+        $this->actingAs($user)->get(route('admin.theme.edit'))->assertOk()->assertSee('Editorial Acesso');
+    }
 }

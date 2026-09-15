@@ -8,7 +8,7 @@
             <div class="form-section-heading"><span>01</span><div><h2>Informações principais</h2><p>Dados usados em todos os modelos de catálogo.</p></div></div>
             <div class="form-grid two-cols">
                 <label class="span-2">Nome do produto<input name="name" value="{{ old('name', $product->name) }}" required maxlength="160" placeholder="Ex.: Cadeira Essencial"></label>
-                <label>Categoria<select name="category_id"><option value="">Sem categoria</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected(old('category_id', $product->category_id) == $category->id)>{{ $category->name }}</option>@endforeach</select></label>
+                <label>Categoria<select name="category_id"><option value="">Sem categoria</option>@foreach($categories as $category)<option value="{{ $category->id }}" @selected(old('category_id', $product->category_id) == $category->id)>{{ str_repeat('— ', $category->depth() - 1) }}{{ $category->name }}</option>@endforeach</select></label>
                 <label>Código / SKU<input name="sku" value="{{ old('sku', $product->sku) }}" maxlength="80" placeholder="CAD-001"></label>
                 <label class="span-2">URL amigável<input name="slug" value="{{ old('slug', $product->slug) }}" maxlength="180" placeholder="gerada-automaticamente"></label>
                 <label class="span-2">Descrição<textarea name="description" rows="5" maxlength="5000" placeholder="Materiais, medidas, diferenciais e aplicações...">{{ old('description', $product->description) }}</textarea></label>

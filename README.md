@@ -9,6 +9,10 @@ Plataforma multiempresa para publicar catálogos personalizados mantendo um úni
 - Painel autenticado com indicadores e CRUD de produtos.
 - Cadastro padronizado de preço normal, promocional, disponibilidade, SKU e foto.
 - Editor de identidade visual com cores, tipografia, capa e formato dos cards.
+- Template “Editorial Acesso”, inspirado na estrutura comercial do catálogo de referência.
+- Editor completo de conteúdo: hero, indicadores, faixa, vitrine, experiência, jornada, contato, FAQ, SEO e rodapé.
+- Categorias e subcategorias com até quatro níveis, publicação no menu principal e filtros por hierarquia.
+- Menus livres para âncoras, páginas internas e endereços externos.
 - Contato por WhatsApp e produtos com preço sob consulta.
 - Comando seguro para provisionar novos clientes.
 - Configurações de referência para Nginx e Supervisor em VPS Hostinger.
@@ -74,6 +78,16 @@ php artisan platform:admin administrador@seudominio.com --name="Administrador da
 ```
 
 Depois de entrar em `/entrar`, essa conta é direcionada para `/plataforma`. Nesse painel é possível cadastrar, editar, suspender, reativar e excluir empresas, além de criar ou redefinir o acesso do administrador de cada cliente. O comando `tenant:create` permanece disponível apenas para manutenção.
+
+## Construtor do catálogo
+
+No painel de cada empresa:
+
+- **Estrutura:** administra menus, categorias e subcategorias;
+- **Conteúdo:** edita todas as áreas comerciais e envia logo e imagem de capa;
+- **Aparência:** seleciona o template e personaliza cores, tipografia e cards.
+
+Para ativar o novo visual, abra **Aparência**, escolha **Editorial Acesso** e publique. Os textos sugeridos funcionam como conteúdo inicial e podem ser substituídos em **Conteúdo**.
 
 ## Qualidade e segurança
 

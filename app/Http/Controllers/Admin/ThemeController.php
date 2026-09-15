@@ -18,14 +18,18 @@ class ThemeController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
+            'template' => ['nullable', Rule::in(['classic', 'accesso'])],
             'primary' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'accent' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'surface' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'dark' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'hero_title' => ['required', 'string', 'max:90'],
             'hero_text' => ['nullable', 'string', 'max:240'],
             'font_style' => ['required', Rule::in(['modern', 'classic', 'technical'])],
             'card_style' => ['required', Rule::in(['soft', 'square', 'outline'])],
         ]);
+        $data['template'] ??= 'classic';
+        $data['dark'] ??= '#111a35';
         $tenant = auth()->user()->tenant;
         $tenant->update(['theme' => $data]);
 

@@ -5,11 +5,17 @@
     <form action="{{ route('admin.theme.update') }}" method="post" class="theme-editor" id="theme-form">
         @csrf @method('PUT')
         <section class="panel-card form-panel">
+            <div class="form-section-heading"><span>00</span><div><h2>Template</h2><p>Escolha a base visual do catálogo. O conteúdo permanece o mesmo.</p></div></div>
+            <div class="template-options">
+                <label class="template-option"><input type="radio" name="template" value="accesso" @checked(data_get($theme, 'template', 'classic') === 'accesso')><span><strong>Editorial Acesso</strong><small>Hero marcante, faixa de destaques e seções comerciais.</small></span></label>
+                <label class="template-option"><input type="radio" name="template" value="classic" @checked(data_get($theme, 'template', 'classic') === 'classic')><span><strong>Catálogo Essencial</strong><small>Layout original, direto e minimalista.</small></span></label>
+            </div>
             <div class="form-section-heading"><span>01</span><div><h2>Cores da marca</h2><p>Aplicadas automaticamente em todo o catálogo.</p></div></div>
             <div class="color-grid">
                 <label>Principal<div class="color-field"><input type="color" name="primary" value="{{ old('primary', data_get($theme, 'primary', '#173f35')) }}"><code>{{ old('primary', data_get($theme, 'primary', '#173f35')) }}</code></div></label>
                 <label>Destaque<div class="color-field"><input type="color" name="accent" value="{{ old('accent', data_get($theme, 'accent', '#e48a4a')) }}"><code>{{ old('accent', data_get($theme, 'accent', '#e48a4a')) }}</code></div></label>
                 <label>Fundo<div class="color-field"><input type="color" name="surface" value="{{ old('surface', data_get($theme, 'surface', '#f4f6f3')) }}"><code>{{ old('surface', data_get($theme, 'surface', '#f4f6f3')) }}</code></div></label>
+                <label>Escura<div class="color-field"><input type="color" name="dark" value="{{ old('dark', data_get($theme, 'dark', '#111a35')) }}"><code>{{ old('dark', data_get($theme, 'dark', '#111a35')) }}</code></div></label>
             </div>
             <div class="form-section-heading separated"><span>02</span><div><h2>Capa do catálogo</h2><p>Mensagem principal exibida aos visitantes.</p></div></div>
             <div class="form-grid">

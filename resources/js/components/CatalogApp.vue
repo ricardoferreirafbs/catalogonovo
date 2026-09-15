@@ -5,15 +5,33 @@ const props = defineProps({
     products: { type: Array, required: true },
     categories: { type: Array, required: true },
     currency: { type: String, default: 'BRL' },
+    initialCategory: { type: String, default: '' },
+    eyebrow: { type: String, default: 'Coleção' },
+    title: { type: String, default: 'Encontre o que combina com você' },
+    description: { type: String, default: '' },
 });
 
 const search = ref('');
-const selectedCategory = ref(null);
+const initial = props.categories.find((category) => category.slug === props.initialCategory);
+const selectedCategory = ref(initial?.id || null);
+
+const categoryIds = computed(() => {
+    if (!selectedCategory.value) return [];
+    const ids = [selectedCategory.value];
+    let changed = true;
+    while (changed) {
+        changed = false;
+        props.categories.forEach((category) => {
+            if (ids.includes(category.parent_id) && !ids.includes(category.id)) { ids.push(category.id); changed = true; }
+        });
+    }
+    return ids;
+});
 
 const filteredProducts = computed(() => {
     const term = search.value.trim().toLocaleLowerCase('pt-BR');
     return props.products.filter((product) => {
-        const categoryMatches = !selectedCategory.value || product.category_id === selectedCategory.value;
+        const categoryMatches = !selectedCategory.value || categoryIds.value.includes(product.category_id);
         const contentMatches = !term || [product.name, product.sku, product.description, product.category]
             .filter(Boolean)
             .some((value) => value.toLocaleLowerCase('pt-BR').includes(term));
@@ -30,8 +48,9 @@ const money = (value) => new Intl.NumberFormat('pt-BR', {
     <section class="catalog-workspace" aria-labelledby="catalog-title">
         <div class="catalog-toolbar">
             <div>
-                <p class="eyebrow">Coleção</p>
-                <h2 id="catalog-title">Encontre o que combina com você</h2>
+                <p class="eyebrow">{{ eyebrow }}</p>
+                <h2 id="catalog-title">{{ title }}</h2>
+                <p v-if="description" class="catalog-intro">{{ description }}</p>
             </div>
             <label class="search-field">
                 <span class="sr-only">Buscar no catálogo</span>
@@ -47,7 +66,7 @@ const money = (value) => new Intl.NumberFormat('pt-BR', {
                 :key="category.id"
                 :class="{ active: selectedCategory === category.id }"
                 @click="selectedCategory = category.id"
-            >{{ category.name }}</button>
+            ><span v-if="category.depth > 1">{{ '—'.repeat(category.depth - 1) }} </span>{{ category.name }}</button>
         </div>
 
         <p class="results-count" aria-live="polite">

@@ -19,6 +19,8 @@
             <nav class="sidebar-nav" aria-label="Menu do painel">
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span>⌂</span> Visão geral</a>
                 <a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}"><span>□</span> Produtos</a>
+                <a class="{{ request()->routeIs('admin.categories.*') || request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}"><span>☷</span> Estrutura</a>
+                <a class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}" href="{{ route('admin.content.edit') }}"><span>✎</span> Conteúdo</a>
                 <a class="{{ request()->routeIs('admin.theme.*') ? 'active' : '' }}" href="{{ route('admin.theme.edit') }}"><span>◐</span> Aparência</a>
                 <a href="{{ auth()->user()->tenant->catalogUrl() }}" target="_blank" rel="noopener"><span>↗</span> Abrir catálogo</a>
             </nav>

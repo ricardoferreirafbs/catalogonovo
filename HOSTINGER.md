@@ -120,6 +120,18 @@ php artisan up
 
 Use releases versionadas e link simbólico para obter rollback confiável antes de atender clientes pagantes.
 
+### Atualização do construtor de catálogo
+
+Depois de enviar esta versão para a hospedagem compartilhada, entre na pasta que contém o arquivo `artisan` e execute:
+
+```bash
+php artisan migrate --force
+php artisan optimize:clear
+php artisan optimize
+```
+
+Os arquivos compilados do novo template já estão em `public/build`; não é necessário executar Node.js na Hostinger. Em seguida, entre no painel do cliente, acesse **Aparência**, selecione **Editorial Acesso** e publique.
+
 ## Itens necessários antes da operação comercial
 
 - cobrança recorrente e webhooks idempotentes;
