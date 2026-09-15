@@ -65,6 +65,16 @@ php artisan tenant:create "Empresa Exemplo" administrador@empresa.com --slug=emp
 
 O comando solicita a senha sem exibi-la no terminal. A partir daí, o catálogo responde pelo domínio cadastrado ou por `empresa.catalogos.seudominio.com`.
 
+## Administração da plataforma
+
+Crie uma única conta interna de superadministrador:
+
+```bash
+php artisan platform:admin administrador@seudominio.com --name="Administrador da Plataforma"
+```
+
+Depois de entrar em `/entrar`, essa conta é direcionada para `/plataforma`. Nesse painel é possível cadastrar, editar, suspender, reativar e excluir empresas, além de criar ou redefinir o acesso do administrador de cada cliente. O comando `tenant:create` permanece disponível apenas para manutenção.
+
 ## Qualidade e segurança
 
 ```bash

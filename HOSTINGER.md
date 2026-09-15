@@ -88,6 +88,14 @@ Depois, dê acesso de escrita ao usuário do PHP somente em `storage`, `bootstra
 
 As pastas temporárias obrigatórias do Laravel já estão incluídas no repositório. Se uma instalação antiga exibir `View path not found`, atualize o projeto pelo Git antes de executar novamente `php artisan optimize:clear`.
 
+Crie a conta interna que administrará as empresas da plataforma:
+
+```bash
+php artisan platform:admin administrador@seudominio.com --name="Administrador da Plataforma"
+```
+
+O comando solicita uma senha de pelo menos 12 caracteres. Após entrar normalmente em `/entrar`, o superadministrador será direcionado para `/plataforma`.
+
 Configure o worker usando `deploy/hostinger-queue.conf` e recarregue o Supervisor. Adicione também um cron executado a cada minuto:
 
 ```cron

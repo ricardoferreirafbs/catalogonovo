@@ -23,9 +23,21 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'E-mail ou senha inválidos.'])->onlyInput('email');
         }
 
+        $user = Auth::user();
+
+        if (! $user->isSuperAdmin() && $user->tenant?->status !== 'active') {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return back()->withErrors(['email' => 'Esta empresa está suspensa ou não está disponível.'])->onlyInput('email');
+        }
+
         $request->session()->regenerate();
 
-        return redirect()->intended(route('admin.dashboard'));
+        $destination = $user->isSuperAdmin() ? route('platform.dashboard') : route('admin.dashboard');
+
+        return redirect()->intended($destination);
     }
 
     public function destroy(Request $request)

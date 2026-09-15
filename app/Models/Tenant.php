@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Tenant extends Model
 {
@@ -43,5 +44,10 @@ class Tenant extends Model
         $host = $this->custom_domain ?: $this->slug.'.'.env('CATALOG_BASE_DOMAIN', parse_url(config('app.url'), PHP_URL_HOST));
 
         return 'https://'.$host;
+    }
+
+    public function owner(): HasOne
+    {
+        return $this->hasOne(User::class)->where('role', 'owner');
     }
 }
