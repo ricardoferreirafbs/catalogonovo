@@ -130,7 +130,7 @@ php artisan optimize:clear
 php artisan optimize
 ```
 
-Os arquivos compilados do novo template já estão em `public/build`; não é necessário executar Node.js na Hostinger. Em seguida, entre no painel do cliente, acesse **Aparência**, selecione **Editorial Acesso** e publique.
+Os arquivos compilados dos templates já estão em `public/build`; não é necessário executar Node.js na Hostinger. Em seguida, entre no painel do cliente, acesse **Aparência**, selecione o template desejado e publique.
 
 ## Itens necessários antes da operação comercial
 

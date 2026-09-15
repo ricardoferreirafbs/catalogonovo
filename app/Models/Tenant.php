@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Tenant extends Model
 {
-    protected $fillable = ['name', 'slug', 'custom_domain', 'status', 'plan', 'contact_phone', 'logo_path', 'hero_image_path', 'theme', 'content'];
+    protected $fillable = ['name', 'slug', 'custom_domain', 'status', 'plan', 'contact_phone', 'logo_path', 'hero_image_path', 'hero_image_2_path', 'hero_image_3_path', 'experience_image_path', 'theme', 'content'];
 
     protected function casts(): array
     {

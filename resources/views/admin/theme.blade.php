@@ -7,6 +7,7 @@
         <section class="panel-card form-panel">
             <div class="form-section-heading"><span>00</span><div><h2>Template</h2><p>Escolha a base visual do catálogo. O conteúdo permanece o mesmo.</p></div></div>
             <div class="template-options">
+                <label class="template-option"><input type="radio" name="template" value="mimo" @checked(data_get($theme, 'template', 'classic') === 'mimo')><span><strong>Mimo & Afetos</strong><small>Visual delicado, colagem de imagens, catálogo afetivo e chamada para orçamento.</small></span></label>
                 <label class="template-option"><input type="radio" name="template" value="accesso" @checked(data_get($theme, 'template', 'classic') === 'accesso')><span><strong>Editorial Acesso</strong><small>Hero marcante, faixa de destaques e seções comerciais.</small></span></label>
                 <label class="template-option"><input type="radio" name="template" value="classic" @checked(data_get($theme, 'template', 'classic') === 'classic')><span><strong>Catálogo Essencial</strong><small>Layout original, direto e minimalista.</small></span></label>
             </div>

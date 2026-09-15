@@ -13,6 +13,9 @@
         <div class="form-grid two-cols editor-section-body">
             <label>Logo<input type="file" name="logo" accept="image/jpeg,image/png,image/webp"><small>PNG, JPG ou WebP · até 2 MB</small></label>
             <label>Imagem principal<input type="file" name="hero_image" accept="image/jpeg,image/png,image/webp"><small>Preferencialmente vertical · até 6 MB</small></label>
+            <label>Imagem complementar 2<input type="file" name="hero_image_2" accept="image/jpeg,image/png,image/webp"><small>Usada na colagem do template Mimo · até 6 MB</small></label>
+            <label>Imagem complementar 3<input type="file" name="hero_image_3" accept="image/jpeg,image/png,image/webp"><small>Usada na colagem do template Mimo · até 6 MB</small></label>
+            <label>Imagem da seção institucional<input type="file" name="experience_image" accept="image/jpeg,image/png,image/webp"><small>Usada na seção Sobre · até 6 MB</small></label>
             <label>WhatsApp / telefone<input name="contact_phone" value="{{ old('contact_phone', $tenant->contact_phone) }}" placeholder="5511999999999"></label>
             <label>Título para Google<input name="seo_title" value="{{ old('seo_title', $content['seo_title']) }}" maxlength="70"></label>
             <label class="span-2">Descrição para Google<textarea name="seo_description" rows="2" maxlength="170">{{ old('seo_description', $content['seo_description']) }}</textarea></label>
@@ -28,6 +31,7 @@
             <label class="span-2">Descrição<textarea name="hero_text" rows="3">{{ old('hero_text', $content['hero_text']) }}</textarea></label>
             <label>Botão principal<input name="hero_primary_label" value="{{ old('hero_primary_label', $content['hero_primary_label']) }}"></label><label>Destino<input name="hero_primary_url" value="{{ old('hero_primary_url', $content['hero_primary_url']) }}"></label>
             <label>Botão secundário<input name="hero_secondary_label" value="{{ old('hero_secondary_label', $content['hero_secondary_label']) }}"></label><label>Destino<input name="hero_secondary_url" value="{{ old('hero_secondary_url', $content['hero_secondary_url']) }}"></label>
+            <label>Título sobre a imagem<input name="hero_note_title" value="{{ old('hero_note_title', $content['hero_note_title']) }}"></label><label>Texto sobre a imagem<input name="hero_note_text" value="{{ old('hero_note_text', $content['hero_note_text']) }}"></label>
             <label class="check-label span-2"><input type="checkbox" name="show_stats" value="1" @checked(old('show_stats', $content['show_stats']))> Exibir indicadores</label>
             @for($i=1;$i<=3;$i++)<label>Indicador {{ $i }} — valor<input name="stat_{{ $i }}_value" value="{{ old("stat_{$i}_value", $content["stat_{$i}_value"]) }}"></label><label>Indicador {{ $i }} — legenda<input name="stat_{{ $i }}_label" value="{{ old("stat_{$i}_label", $content["stat_{$i}_label"]) }}"></label>@endfor
             <label class="check-label"><input type="checkbox" name="show_marquee" value="1" @checked(old('show_marquee', $content['show_marquee']))> Exibir faixa de destaques</label>
@@ -44,6 +48,8 @@
             <label class="check-label span-2"><input type="checkbox" name="show_experience" value="1" @checked(old('show_experience', $content['show_experience']))> Exibir seção de experiência</label>
             <label>Chamada<input name="experience_eyebrow" value="{{ old('experience_eyebrow', $content['experience_eyebrow']) }}"></label><label>Título<input name="experience_title" value="{{ old('experience_title', $content['experience_title']) }}"></label>
             <label class="span-2">Texto<textarea name="experience_text" rows="3">{{ old('experience_text', $content['experience_text']) }}</textarea></label>
+            <label class="span-2">Frase em destaque<input name="about_quote" value="{{ old('about_quote', $content['about_quote']) }}"></label>
+            <label>Botão institucional<input name="about_button_label" value="{{ old('about_button_label', $content['about_button_label']) }}"></label><label>Destino do botão<input name="about_button_url" value="{{ old('about_button_url', $content['about_button_url']) }}" placeholder="https://instagram.com/..."></label>
             @for($i=1;$i<=3;$i++)<label>Diferencial {{ $i }}<input name="experience_item_{{ $i }}_title" value="{{ old("experience_item_{$i}_title", $content["experience_item_{$i}_title"]) }}"></label><label>Descrição<textarea name="experience_item_{{ $i }}_text" rows="2">{{ old("experience_item_{$i}_text", $content["experience_item_{$i}_text"]) }}</textarea></label>@endfor
         </div>
     </details>
@@ -67,6 +73,7 @@
             <label>Chamada<input name="faq_eyebrow" value="{{ old('faq_eyebrow', $content['faq_eyebrow']) }}"></label><label>Título<input name="faq_title" value="{{ old('faq_title', $content['faq_title']) }}"></label>
             @for($i=1;$i<=3;$i++)<label>Pergunta {{ $i }}<input name="faq_{{ $i }}_question" value="{{ old("faq_{$i}_question", $content["faq_{$i}_question"]) }}"></label><label>Resposta<textarea name="faq_{{ $i }}_answer" rows="2">{{ old("faq_{$i}_answer", $content["faq_{$i}_answer"]) }}</textarea></label>@endfor
             <label class="span-2">Texto do rodapé<textarea name="footer_text" rows="2">{{ old('footer_text', $content['footer_text']) }}</textarea></label>
+            <label>Nome do perfil social<input name="footer_social_label" value="{{ old('footer_social_label', $content['footer_social_label']) }}"></label><label>Link do perfil social<input name="footer_social_url" value="{{ old('footer_social_url', $content['footer_social_url']) }}"></label>
         </div>
     </details>
     <div class="sticky-save"><span>Revise as alterações antes de publicar.</span><button class="primary-button" type="submit">Publicar conteúdo</button></div>

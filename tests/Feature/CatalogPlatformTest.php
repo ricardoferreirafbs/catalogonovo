@@ -152,4 +152,24 @@ class CatalogPlatformTest extends TestCase
         $this->actingAs($user)->get(route('admin.content.edit'))->assertOk()->assertSee('Editor de todas as áreas');
         $this->actingAs($user)->get(route('admin.theme.edit'))->assertOk()->assertSee('Editorial Acesso');
     }
+
+    public function test_mimo_template_renders_its_editable_sections(): void
+    {
+        $tenant = Tenant::create([
+            'name' => 'Ateliê Afetivo', 'slug' => 'aurora', 'theme' => ['template' => 'mimo'],
+            'content' => [
+                'hero_title' => 'Presentes feitos para', 'hero_highlight' => 'emocionar.',
+                'hero_note_title' => 'Feito só para você', 'about_quote' => 'Detalhes viram lembranças.',
+                'footer_social_label' => '@atelieafetivo', 'footer_social_url' => 'https://instagram.com/atelieafetivo',
+            ],
+        ]);
+
+        $this->withServerVariables(['HTTP_HOST' => 'aurora.catalogos.test'])->get('/')
+            ->assertOk()
+            ->assertSee('template-mimo')
+            ->assertSee('Presentes feitos para')
+            ->assertSee('Feito só para você')
+            ->assertSee('Detalhes viram lembranças.')
+            ->assertSee('@atelieafetivo');
+    }
 }
