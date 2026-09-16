@@ -12,6 +12,9 @@ class Tenant extends Model
         'mimo' => ['primary' => '#7C2944', 'accent' => '#D79A9B', 'surface' => '#FFF9F5', 'dark' => '#572235'],
         'accesso' => ['primary' => '#3478D4', 'accent' => '#FFD51F', 'surface' => '#FBFAF6', 'dark' => '#111A35'],
         'classic' => ['primary' => '#173F35', 'accent' => '#E48A4A', 'surface' => '#F4F6F3', 'dark' => '#14231F'],
+        'prisma' => ['primary' => '#00B889', 'accent' => '#7C5CFF', 'surface' => '#F2F6F7', 'dark' => '#07151B'],
+        'impeto' => ['primary' => '#D51F2B', 'accent' => '#F0B429', 'surface' => '#F3F1EC', 'dark' => '#111214'],
+        'aurea' => ['primary' => '#B28A45', 'accent' => '#E4C98D', 'surface' => '#F8F4EC', 'dark' => '#1C1813'],
     ];
 
     protected $fillable = ['name', 'slug', 'custom_domain', 'status', 'plan', 'contact_phone', 'logo_path', 'hero_image_path', 'hero_image_2_path', 'hero_image_3_path', 'experience_image_path', 'theme', 'content'];

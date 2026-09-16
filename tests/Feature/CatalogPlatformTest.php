@@ -163,10 +163,19 @@ class CatalogPlatformTest extends TestCase
             ->assertSee('#7C2944')
             ->assertSee('#3478D4')
             ->assertSee('#173F35')
+            ->assertSee('#00B889')
+            ->assertSee('#D51F2B')
+            ->assertSee('#B28A45')
+            ->assertSee('Prisma')
+            ->assertSee('Ímpeto')
+            ->assertSee('Áurea')
             ->assertSee('Restaurar cores originais')
             ->assertSee('preview-art-mimo')
             ->assertSee('preview-art-accesso')
-            ->assertSee('preview-art-classic');
+            ->assertSee('preview-art-classic')
+            ->assertSee('preview-art-prisma')
+            ->assertSee('preview-art-impeto')
+            ->assertSee('preview-art-aurea');
     }
 
     public function test_new_tenant_created_in_platform_receives_the_default_template_palette(): void
@@ -194,5 +203,43 @@ class CatalogPlatformTest extends TestCase
             ->assertSee('Feito só para você')
             ->assertSee('Detalhes viram lembranças.')
             ->assertSee('@atelieafetivo');
+    }
+
+    public function test_new_signature_templates_render_their_distinct_catalogs(): void
+    {
+        foreach (['prisma', 'impeto', 'aurea'] as $template) {
+            Tenant::create([
+                'name' => 'Coleção Premium',
+                'slug' => $template,
+                'custom_domain' => $template.'.catalogos.test',
+                'status' => 'active',
+                'theme' => ['template' => $template],
+                'content' => ['hero_title' => 'Precisão em cada escolha', 'experience_title' => 'Experiência sob medida'],
+            ]);
+
+            $response = $this->get('http://'.$template.'.catalogos.test/');
+            $this->assertSame(200, $response->status(), "Template {$template} deveria abrir o catálogo.");
+            $response
+                ->assertSee('template-'.$template)
+                ->assertSee('Precisão em cada escolha')
+                ->assertSee('Experiência sob medida')
+                ->assertSee($template.'-hero');
+        }
+    }
+
+    public function test_signature_template_can_be_published_from_appearance_editor(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+
+        $this->actingAs($user)->put(route('admin.theme.update'), [
+            'template' => 'aurea',
+            'primary' => '#B28A45', 'accent' => '#E4C98D', 'surface' => '#F8F4EC', 'dark' => '#1C1813',
+            'hero_title' => 'Joias de presença', 'hero_text' => 'Uma coleção exclusiva.',
+            'font_style' => 'classic', 'card_style' => 'soft',
+        ])->assertRedirect();
+
+        $this->assertSame('aurea', $tenant->fresh()->theme['template']);
+        $this->assertSame('#B28A45', $tenant->fresh()->theme['primary']);
     }
 }

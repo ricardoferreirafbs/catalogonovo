@@ -22,7 +22,7 @@ class ThemeController extends Controller
     public function update(Request $request)
     {
         $data = $request->validate([
-            'template' => ['nullable', Rule::in(['classic', 'accesso', 'mimo'])],
+            'template' => ['nullable', Rule::in(['classic', 'accesso', 'mimo', 'prisma', 'impeto', 'aurea'])],
             'primary' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'accent' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'surface' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],

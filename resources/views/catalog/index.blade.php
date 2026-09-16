@@ -2,8 +2,13 @@
 
 @section('content')
 @php
-    $isAccesso = $tenant->themeValue('template', 'classic') === 'accesso';
-    $isMimo = $tenant->themeValue('template', 'classic') === 'mimo';
+    $template = $tenant->themeValue('template', 'classic');
+    $isAccesso = $template === 'accesso';
+    $isMimo = $template === 'mimo';
+    $isPrisma = $template === 'prisma';
+    $isImpeto = $template === 'impeto';
+    $isAurea = $template === 'aurea';
+    $isSignature = $isPrisma || $isImpeto || $isAurea;
     $heroProduct = $products->firstWhere('featured', true) ?? $products->first();
     $heroImage = $tenant->hero_image_path ? Storage::disk('uploads')->url($tenant->hero_image_path) : data_get($heroProduct, 'image');
     $heroImage2 = $tenant->hero_image_2_path ? Storage::disk('uploads')->url($tenant->hero_image_2_path) : data_get($products->values()->get(1), 'image', $heroImage);
@@ -47,11 +52,20 @@
         </div>
     </section>
     @if($content['show_marquee'])<div class="mimo-ribbon"><div class="container">@foreach(array_filter(array_map('trim', preg_split('/[•|]+/', $content['marquee']))) as $item)<span>{{ $item }}</span>@if(!$loop->last)<i>◆</i>@endif @endforeach</div></div>@endif
+@elseif($isPrisma)
+    <section id="top" class="prisma-hero"><div class="container prisma-hero-grid"><div class="prisma-copy"><p class="signature-eyebrow">SYS / {{ $content['hero_eyebrow'] }}</p><h1>{{ $content['hero_title'] }} <em>{{ $content['hero_highlight'] }}</em></h1><p class="signature-lead">{{ $content['hero_text'] }}</p><div class="signature-actions"><a href="{{ $content['hero_primary_url'] ?: '#catalogo' }}">{{ $content['hero_primary_label'] }} <span>↗</span></a>@if($content['hero_secondary_label'])<a class="ghost" href="{{ $content['hero_secondary_url'] ?: '#como-pedir' }}">{{ $content['hero_secondary_label'] }}</a>@endif</div>@if($content['show_stats'])<div class="prisma-stats">@for($i=1;$i<=3;$i++)<div><small>0{{ $i }}</small><strong>{{ $content["stat_{$i}_value"] }}</strong><span>{{ $content["stat_{$i}_label"] }}</span></div>@endfor</div>@endif</div><div class="prisma-machine"><span class="machine-grid"></span><span class="machine-orbit one"></span><span class="machine-orbit two"></span><div class="machine-core">{{ mb_strtoupper(mb_substr($tenant->name,0,2)) }}</div><b>PRECISION / SYSTEM</b><i>{{ str_pad((string)$products->count(), 2, '0', STR_PAD_LEFT) }} ITEMS</i></div></div></section>
+    @if($content['show_marquee'])<div class="signature-marquee prisma-marquee"><span>{{ $content['marquee'] }}</span></div>@endif
+@elseif($isImpeto)
+    <section id="top" class="impeto-hero">@if($heroImage)<img src="{{ $heroImage }}" alt="Veículo em destaque de {{ $tenant->name }}">@endif<div class="impeto-shade"></div><div class="container impeto-copy"><p class="signature-eyebrow">{{ $content['hero_eyebrow'] }} / PERFORMANCE</p><h1>{{ $content['hero_title'] }} <em>{{ $content['hero_highlight'] }}</em></h1><p class="signature-lead">{{ $content['hero_text'] }}</p><div class="signature-actions"><a href="{{ $content['hero_primary_url'] ?: '#catalogo' }}">{{ $content['hero_primary_label'] }} <span>→</span></a>@if($whatsapp)<a class="ghost" href="{{ $whatsapp }}" target="_blank" rel="noopener">Falar com consultor</a>@endif</div>@if($content['show_stats'])<div class="impeto-stats">@for($i=1;$i<=3;$i++)<div><strong>{{ $content["stat_{$i}_value"] }}</strong><span>{{ $content["stat_{$i}_label"] }}</span></div>@endfor</div>@endif</div><div class="impeto-index">{{ str_pad((string)$products->count(), 2, '0', STR_PAD_LEFT) }}<span>VEÍCULOS</span></div></section>
+    @if($content['show_marquee'])<div class="signature-marquee impeto-marquee"><span>{{ $content['marquee'] }}</span></div>@endif
+@elseif($isAurea)
+    <section id="top" class="aurea-hero container"><div class="aurea-copy"><p class="signature-eyebrow">◆ &nbsp; {{ $content['hero_eyebrow'] }}</p><h1>{{ $content['hero_title'] }} <em>{{ $content['hero_highlight'] }}</em></h1><p class="signature-lead">{{ $content['hero_text'] }}</p><div class="signature-actions"><a href="{{ $content['hero_primary_url'] ?: '#catalogo' }}">{{ $content['hero_primary_label'] }} <span>→</span></a>@if($content['hero_secondary_label'])<a class="ghost" href="{{ $content['hero_secondary_url'] ?: '#como-pedir' }}">{{ $content['hero_secondary_label'] }}</a>@endif</div></div><div class="aurea-showcase"><span class="aurea-ring"></span>@if($heroImage)<img src="{{ $heroImage }}" alt="Joia em destaque de {{ $tenant->name }}">@else<div class="aurea-placeholder">◆</div>@endif<div><small>{{ $content['hero_note_title'] }}</small><strong>{{ $content['hero_note_text'] }}</strong></div></div></section>
+    @if($content['show_marquee'])<div class="signature-marquee aurea-marquee"><span>{{ $content['marquee'] }}</span></div>@endif
 @else
     <section class="catalog-hero container"><div class="hero-copy"><p class="eyebrow">{{ $content['hero_eyebrow'] }}</p><h1>{{ $content['hero_title'] }} {{ $content['hero_highlight'] }}</h1><p>{{ $content['hero_text'] }}</p><a href="#catalogo" class="primary-button">{{ $content['hero_primary_label'] }} <span>↓</span></a></div><div class="hero-composition" aria-hidden="true"><span class="hero-orbit"></span><div class="hero-card hero-card-main"><span>Seleção</span><strong>{{ $products->count() }}</strong><small>produtos disponíveis</small></div><div class="hero-card hero-card-accent">Feito<br>para<br>descobrir.</div></div></section>
 @endif
 
-<div id="catalogo" class="container {{ $isAccesso ? 'accesso-catalog-wrap' : ($isMimo ? 'mimo-catalog-wrap' : '') }}">
+<div id="catalogo" class="container {{ $isAccesso ? 'accesso-catalog-wrap' : ($isMimo ? 'mimo-catalog-wrap' : ($isSignature ? $template.'-catalog-wrap' : '')) }}">
     <div id="catalog-app" data-products='@json($products)' data-categories='@json($categoryPayload)' data-currency="BRL" data-initial-category="{{ request('categoria') }}" data-eyebrow="{{ $content['catalog_eyebrow'] }}" data-title="{{ $content['catalog_title'] }}" data-description="{{ $content['catalog_text'] }}"></div>
 </div>
 
@@ -85,5 +99,21 @@
 
 @if($isMimo && $content['show_faq'])
 <section class="mimo-faq container"><div><p class="mimo-eyebrow">✦ &nbsp; {{ $content['faq_eyebrow'] }}</p><h2>{{ $content['faq_title'] }}</h2></div><div>@for($i=1;$i<=3;$i++)@if($content["faq_{$i}_question"])<details><summary>{{ $content["faq_{$i}_question"] }} <span>+</span></summary><p>{{ $content["faq_{$i}_answer"] }}</p></details>@endif @endfor</div></section>
+@endif
+
+@if($isSignature && $content['show_experience'])
+<section id="experiencia" class="signature-experience"><div class="container signature-experience-grid"><div><p class="signature-eyebrow">{{ $content['experience_eyebrow'] }}</p><h2>{{ $content['experience_title'] }}</h2><p>{{ $content['experience_text'] }}</p></div><div class="signature-features">@for($i=1;$i<=3;$i++)<article><span>0{{ $i }}</span><div><h3>{{ $content["experience_item_{$i}_title"] }}</h3><p>{{ $content["experience_item_{$i}_text"] }}</p></div></article>@endfor</div></div></section>
+@endif
+
+@if($isSignature && $content['show_steps'])
+<section id="como-pedir" class="signature-steps container"><p class="signature-eyebrow">{{ $content['steps_eyebrow'] }}</p><h2>{{ $content['steps_title'] }}</h2><div>@for($i=1;$i<=3;$i++)<article><span>0{{ $i }}</span><h3>{{ $content["step_{$i}_title"] }}</h3><p>{{ $content["step_{$i}_text"] }}</p></article>@endfor</div></section>
+@endif
+
+@if($isSignature && $content['show_contact'] && $whatsapp)
+<section class="signature-contact container"><div><p class="signature-eyebrow">{{ $content['contact_eyebrow'] }}</p><h2>{{ $content['contact_title'] }}</h2><p>{{ $content['contact_text'] }}</p></div><a href="{{ $whatsapp }}" target="_blank" rel="noopener">{{ $content['contact_button'] }} ↗</a></section>
+@endif
+
+@if($isSignature && $content['show_faq'])
+<section class="signature-faq container"><div><p class="signature-eyebrow">{{ $content['faq_eyebrow'] }}</p><h2>{{ $content['faq_title'] }}</h2></div><div>@for($i=1;$i<=3;$i++)@if($content["faq_{$i}_question"])<details><summary>{{ $content["faq_{$i}_question"] }} <span>+</span></summary><p>{{ $content["faq_{$i}_answer"] }}</p></details>@endif @endfor</div></section>
 @endif
 @endsection
