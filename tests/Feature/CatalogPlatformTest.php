@@ -223,6 +223,8 @@ class CatalogPlatformTest extends TestCase
                 ->assertSee('template-'.$template)
                 ->assertSee('Precisão em cada escolha')
                 ->assertSee('Experiência sob medida')
+                ->assertSee($template.'-header')
+                ->assertSee($template.'-footer')
                 ->assertSee($template.'-hero');
         }
     }

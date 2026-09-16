@@ -23,6 +23,7 @@
     <header class="catalog-header {{ $template === 'accesso' ? 'accesso-header' : ($isMimo ? 'mimo-header' : ($isSignature ? 'signature-header '.$template.'-header' : '')) }} container">
         <a href="{{ route('catalog.index') }}" class="brand" aria-label="Página inicial de {{ $tenant->name }}">
             @if($tenant->logo_path)<img src="{{ Storage::disk('uploads')->url($tenant->logo_path) }}" alt="{{ $tenant->name }}">@else<span class="brand-mark">{{ $isMimo ? '♡' : ($template === 'aurea' ? '◆' : mb_substr($tenant->name,0,2)) }}</span><span>{{ $tenant->name }}</span>@endif
+            @if($isSignature)<small class="brand-signature">{{ ['prisma' => 'TECHNICAL SYSTEMS', 'impeto' => 'MOTORS', 'aurea' => 'JOAILLERIE'][$template] }}</small>@endif
         </a>
         <button class="mobile-menu-button" type="button" aria-label="Abrir menu" aria-expanded="false" onclick="this.setAttribute('aria-expanded',this.getAttribute('aria-expanded')!=='true');this.nextElementSibling.classList.toggle('open')">☰</button>
         <nav aria-label="Navegação principal">
