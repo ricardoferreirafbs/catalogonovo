@@ -68,7 +68,7 @@ O seeder é exclusivo para desenvolvimento. Não execute `--seed` em produção.
 php artisan tenant:create "Empresa Exemplo" administrador@empresa.com --slug=empresa --domain=catalogo.empresa.com.br --plan=professional
 ```
 
-O comando solicita a senha sem exibi-la no terminal. A partir daí, o catálogo responde pelo domínio cadastrado ou por `empresa.catalogos.seudominio.com`.
+O comando solicita a senha sem exibi-la no terminal e exige ao menos 12 caracteres, com letra maiúscula, minúscula, número e símbolo. A partir daí, o catálogo responde pelo domínio cadastrado ou por `empresa.catalogos.seudominio.com`.
 
 ## Administração da plataforma
 
@@ -98,6 +98,8 @@ npm run build
 php artisan optimize
 ```
 
-Antes de produção, use `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, backup externo e uma senha exclusiva para o banco.
+Antes de produção, use `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, backup externo e uma senha exclusiva para o banco. Mantenha `SESSION_ENCRYPT=true`, `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true` e `SESSION_SAME_SITE=lax`.
+
+Instalações antigas devem remover a conta conhecida de demonstração com `php artisan security:remove-demo-account --force`. O comando preserva a empresa, os produtos e o catálogo.
 
 Consulte [HOSTINGER.md](HOSTINGER.md) para a publicação.

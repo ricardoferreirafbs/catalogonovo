@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Rules\SafeUrl;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,18 +22,18 @@ class ContentController extends Controller
             'contact_phone' => ['nullable', 'string', 'max:30'], 'logo' => ['nullable', 'image', 'max:2048'], 'hero_image' => ['nullable', 'image', 'max:6144'], 'hero_image_2' => ['nullable', 'image', 'max:6144'], 'hero_image_3' => ['nullable', 'image', 'max:6144'], 'experience_image' => ['nullable', 'image', 'max:6144'],
             'seo_title' => ['nullable', 'string', 'max:70'], 'seo_description' => ['nullable', 'string', 'max:170'],
             'hero_eyebrow' => ['nullable', 'string', 'max:80'], 'hero_title' => ['required', 'string', 'max:120'], 'hero_highlight' => ['nullable', 'string', 'max:80'], 'hero_text' => ['nullable', 'string', 'max:360'],
-            'hero_primary_label' => ['nullable', 'string', 'max:40'], 'hero_primary_url' => ['nullable', 'string', 'max:255'], 'hero_secondary_label' => ['nullable', 'string', 'max:40'], 'hero_secondary_url' => ['nullable', 'string', 'max:255'],
+            'hero_primary_label' => ['nullable', 'string', 'max:40'], 'hero_primary_url' => ['nullable', 'string', 'max:255', new SafeUrl], 'hero_secondary_label' => ['nullable', 'string', 'max:40'], 'hero_secondary_url' => ['nullable', 'string', 'max:255', new SafeUrl],
             'hero_note_title' => ['nullable', 'string', 'max:80'], 'hero_note_text' => ['nullable', 'string', 'max:160'],
             'stat_1_value' => ['nullable', 'string', 'max:30'], 'stat_1_label' => ['nullable', 'string', 'max:50'], 'stat_2_value' => ['nullable', 'string', 'max:30'], 'stat_2_label' => ['nullable', 'string', 'max:50'], 'stat_3_value' => ['nullable', 'string', 'max:30'], 'stat_3_label' => ['nullable', 'string', 'max:50'],
             'marquee' => ['nullable', 'string', 'max:300'], 'catalog_eyebrow' => ['nullable', 'string', 'max:80'], 'catalog_title' => ['nullable', 'string', 'max:120'], 'catalog_text' => ['nullable', 'string', 'max:300'],
             'experience_eyebrow' => ['nullable', 'string', 'max:80'], 'experience_title' => ['nullable', 'string', 'max:140'], 'experience_text' => ['nullable', 'string', 'max:700'],
-            'about_quote' => ['nullable', 'string', 'max:240'], 'about_button_label' => ['nullable', 'string', 'max:60'], 'about_button_url' => ['nullable', 'string', 'max:500'],
+            'about_quote' => ['nullable', 'string', 'max:240'], 'about_button_label' => ['nullable', 'string', 'max:60'], 'about_button_url' => ['nullable', 'string', 'max:500', new SafeUrl],
             'experience_item_1_title' => ['nullable', 'string', 'max:80'], 'experience_item_1_text' => ['nullable', 'string', 'max:240'], 'experience_item_2_title' => ['nullable', 'string', 'max:80'], 'experience_item_2_text' => ['nullable', 'string', 'max:240'], 'experience_item_3_title' => ['nullable', 'string', 'max:80'], 'experience_item_3_text' => ['nullable', 'string', 'max:240'],
             'steps_eyebrow' => ['nullable', 'string', 'max:80'], 'steps_title' => ['nullable', 'string', 'max:140'],
             'step_1_title' => ['nullable', 'string', 'max:80'], 'step_1_text' => ['nullable', 'string', 'max:240'], 'step_2_title' => ['nullable', 'string', 'max:80'], 'step_2_text' => ['nullable', 'string', 'max:240'], 'step_3_title' => ['nullable', 'string', 'max:80'], 'step_3_text' => ['nullable', 'string', 'max:240'],
             'contact_eyebrow' => ['nullable', 'string', 'max:80'], 'contact_title' => ['nullable', 'string', 'max:140'], 'contact_text' => ['nullable', 'string', 'max:400'], 'contact_button' => ['nullable', 'string', 'max:50'],
             'faq_eyebrow' => ['nullable', 'string', 'max:80'], 'faq_title' => ['nullable', 'string', 'max:120'], 'faq_1_question' => ['nullable', 'string', 'max:160'], 'faq_1_answer' => ['nullable', 'string', 'max:500'], 'faq_2_question' => ['nullable', 'string', 'max:160'], 'faq_2_answer' => ['nullable', 'string', 'max:500'], 'faq_3_question' => ['nullable', 'string', 'max:160'], 'faq_3_answer' => ['nullable', 'string', 'max:500'],
-            'footer_text' => ['nullable', 'string', 'max:300'], 'footer_social_label' => ['nullable', 'string', 'max:80'], 'footer_social_url' => ['nullable', 'string', 'max:500'],
+            'footer_text' => ['nullable', 'string', 'max:300'], 'footer_social_label' => ['nullable', 'string', 'max:80'], 'footer_social_url' => ['nullable', 'string', 'max:500', new SafeUrl],
         ];
         $data = $request->validate($rules);
         $tenant->contact_phone = $data['contact_phone'] ?? null;

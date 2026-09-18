@@ -66,6 +66,10 @@ DB_USERNAME=usuario_fornecido_pela_hostinger
 DB_PASSWORD=senha_forte
 
 SESSION_DRIVER=database
+SESSION_ENCRYPT=true
+SESSION_SECURE_COOKIE=true
+SESSION_HTTP_ONLY=true
+SESSION_SAME_SITE=lax
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 FILESYSTEM_DISK=uploads
@@ -94,7 +98,15 @@ Crie a conta interna que administrará as empresas da plataforma:
 php artisan platform:admin administrador@seudominio.com --name="Administrador da Plataforma"
 ```
 
-O comando solicita uma senha de pelo menos 12 caracteres. Após entrar normalmente em `/entrar`, o superadministrador será direcionado para `/plataforma`.
+O comando solicita uma senha de pelo menos 12 caracteres, com letra maiúscula, minúscula, número e símbolo. Após entrar normalmente em `/entrar`, o superadministrador será direcionado para `/plataforma`.
+
+Se uma versão anterior chegou a criar a conta pública de demonstração, remova somente esse acesso sem apagar o catálogo associado:
+
+```bash
+php artisan security:remove-demo-account --force
+```
+
+Não execute `php artisan db:seed` em produção. A versão atual bloqueia os dados demonstrativos quando `APP_ENV=production`, mas o comando acima ainda é necessário para instalações antigas.
 
 Configure o worker usando `deploy/hostinger-queue.conf` e recarregue o Supervisor. Adicione também um cron executado a cada minuto:
 
@@ -113,6 +125,7 @@ composer install --no-dev --optimize-autoloader
 npm ci
 npm run build
 php artisan migrate --force
+php artisan security:remove-demo-account --force
 php artisan optimize
 php artisan queue:restart
 php artisan up

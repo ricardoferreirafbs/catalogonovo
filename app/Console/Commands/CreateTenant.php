@@ -8,7 +8,9 @@ use Illuminate\Console\Command;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class CreateTenant extends Command
 {
@@ -41,9 +43,14 @@ class CreateTenant extends Command
             return self::FAILURE;
         }
 
-        $password = $this->secret('Defina a senha inicial (mínimo 8 caracteres)');
-        if (! is_string($password) || strlen($password) < 8) {
-            $this->error('A senha deve ter pelo menos 8 caracteres.');
+        $password = $this->secret('Defina a senha inicial (12+ caracteres, com maiúscula, minúscula, número e símbolo)');
+        $passwordValidation = Validator::make(
+            ['password' => $password],
+            ['password' => ['required', 'string', Password::min(12)->mixedCase()->letters()->numbers()->symbols()]]
+        );
+
+        if ($passwordValidation->fails()) {
+            $this->error('A senha deve ter ao menos 12 caracteres, com maiúscula, minúscula, número e símbolo.');
 
             return self::FAILURE;
         }

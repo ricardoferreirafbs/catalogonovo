@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 class CreatePlatformAdmin extends Command
 {
@@ -22,10 +24,14 @@ class CreatePlatformAdmin extends Command
             return self::FAILURE;
         }
 
-        $password = $this->secret('Defina a senha inicial (mínimo 12 caracteres)');
+        $password = $this->secret('Defina a senha inicial (12+ caracteres, com maiúscula, minúscula, número e símbolo)');
+        $passwordValidation = Validator::make(
+            ['password' => $password],
+            ['password' => ['required', 'string', Password::min(12)->mixedCase()->letters()->numbers()->symbols()]]
+        );
 
-        if (! is_string($password) || strlen($password) < 12) {
-            $this->error('A senha deve ter pelo menos 12 caracteres.');
+        if ($passwordValidation->fails()) {
+            $this->error('A senha deve ter ao menos 12 caracteres, com maiúscula, minúscula, número e símbolo.');
 
             return self::FAILURE;
         }

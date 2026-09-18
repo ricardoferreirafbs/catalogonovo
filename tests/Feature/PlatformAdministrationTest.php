@@ -36,8 +36,8 @@ class PlatformAdministrationTest extends TestCase
             'contact_phone' => '5511999999999',
             'admin_name' => 'Gestor da Empresa',
             'admin_email' => 'GESTOR@EMPRESA.COM.BR',
-            'admin_password' => 'senha-segura',
-            'admin_password_confirmation' => 'senha-segura',
+            'admin_password' => 'Senha-Segura2026!',
+            'admin_password_confirmation' => 'Senha-Segura2026!',
         ]);
 
         $tenant = Tenant::where('slug', 'empresa-nova')->firstOrFail();

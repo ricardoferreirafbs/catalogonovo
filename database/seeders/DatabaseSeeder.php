@@ -13,6 +13,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->environment('production')) {
+            $this->command?->warn('Dados de demonstração não foram criados em produção.');
+
+            return;
+        }
+
         $tenant = Tenant::updateOrCreate(
             ['slug' => 'aurora'],
             [

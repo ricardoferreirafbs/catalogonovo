@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class TenantController extends Controller
 {
@@ -140,7 +141,12 @@ class TenantController extends Controller
             'contact_phone' => ['nullable', 'string', 'max:30'],
             'admin_name' => ['required', 'string', 'max:160'],
             'admin_email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($owner?->id)],
-            'admin_password' => [$tenant && $owner ? 'nullable' : 'required', 'string', 'min:8', 'confirmed'],
+            'admin_password' => [
+                $tenant && $owner ? 'nullable' : 'required',
+                'string',
+                Password::min(12)->mixedCase()->letters()->numbers()->symbols(),
+                'confirmed',
+            ],
         ], [
             'custom_domain.regex' => 'Informe somente o domínio, sem http://, https:// ou caminhos.',
             'admin_password.confirmed' => 'A confirmação da senha não corresponde.',

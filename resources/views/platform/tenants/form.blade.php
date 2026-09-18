@@ -21,8 +21,8 @@
             <div class="form-grid two-cols">
                 <label>Nome<input name="admin_name" required maxlength="160" value="{{ old('admin_name', $owner->name ?: 'Administrador') }}"></label>
                 <label>E-mail<input name="admin_email" type="email" required maxlength="255" value="{{ old('admin_email', $owner->email) }}"></label>
-                <label>Senha {{ $editing && $owner->exists ? '(opcional)' : '' }}<input name="admin_password" type="password" minlength="8" @required(! $editing || ! $owner->exists) autocomplete="new-password"><small>{{ $editing && $owner->exists ? 'Deixe em branco para manter a senha atual.' : 'Mínimo de 8 caracteres.' }}</small></label>
-                <label>Confirmar senha<input name="admin_password_confirmation" type="password" minlength="8" @required(! $editing || ! $owner->exists) autocomplete="new-password"></label>
+                <label>Senha {{ $editing && $owner->exists ? '(opcional)' : '' }}<input name="admin_password" type="password" minlength="12" @required(! $editing || ! $owner->exists) autocomplete="new-password"><small>{{ $editing && $owner->exists ? 'Deixe em branco para manter a senha atual. Ao trocar, use 12 caracteres com maiúscula, minúscula, número e símbolo.' : 'Use 12 caracteres com maiúscula, minúscula, número e símbolo.' }}</small></label>
+                <label>Confirmar senha<input name="admin_password_confirmation" type="password" minlength="12" @required(! $editing || ! $owner->exists) autocomplete="new-password"></label>
             </div>
 
             <div class="form-actions platform-form-actions"><a href="{{ route('platform.tenants.index') }}">Cancelar</a><button class="primary-button" type="submit">{{ $editing ? 'Salvar alterações' : 'Criar empresa' }}</button></div>

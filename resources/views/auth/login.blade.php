@@ -22,7 +22,6 @@
                 <label>Senha<input type="password" name="password" autocomplete="current-password" required placeholder="••••••••"></label>
                 <label class="check-label"><input type="checkbox" name="remember" value="1"> Manter conectado</label>
                 <button type="submit" class="primary-button full-button">Entrar no painel</button>
-                <small class="demo-hint">Demonstração: admin@catalogo.test · catalogo123</small>
             </form>
         </section>
     </main>

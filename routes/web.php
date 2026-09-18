@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContentController;
-use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\AuthController;
@@ -19,7 +19,7 @@ Route::middleware('tenant')->group(function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/entrar', [AuthController::class, 'create'])->name('login');
-    Route::post('/entrar', [AuthController::class, 'store'])->name('login.store');
+    Route::post('/entrar', [AuthController::class, 'store'])->middleware('throttle:login')->name('login.store');
 });
 
 Route::post('/sair', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
