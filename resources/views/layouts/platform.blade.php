@@ -20,6 +20,8 @@
                 <a class="{{ request()->routeIs('platform.dashboard') ? 'active' : '' }}" href="{{ route('platform.dashboard') }}"><span>⌂</span> Visão geral</a>
                 <a class="{{ request()->routeIs('platform.tenants.*') ? 'active' : '' }}" href="{{ route('platform.tenants.index') }}"><span>▦</span> Empresas</a>
                 <a href="{{ route('platform.tenants.create') }}"><span>＋</span> Nova empresa</a>
+                <a class="{{ request()->routeIs('platform.audit.*') ? 'active' : '' }}" href="{{ route('platform.audit.index') }}"><span>◎</span> Auditoria</a>
+                <a class="{{ request()->routeIs('platform.mfa.*') ? 'active' : '' }}" href="{{ route('platform.mfa.setup') }}"><span>◇</span> Segurança</a>
             </nav>
             <form action="{{ route('logout') }}" method="post" class="sidebar-logout">
                 @csrf

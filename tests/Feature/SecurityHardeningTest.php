@@ -120,9 +120,15 @@ class SecurityHardeningTest extends TestCase
 
     public function test_weak_tenant_admin_password_is_rejected(): void
     {
-        $superAdmin = User::factory()->create(['tenant_id' => null, 'role' => 'superadmin']);
+        $superAdmin = User::factory()->create([
+            'tenant_id' => null,
+            'role' => 'superadmin',
+            'two_factor_secret' => 'JBSWY3DPEHPK3PXP',
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
 
-        $this->actingAs($superAdmin)->post(route('platform.tenants.store'), [
+        $this->actingAs($superAdmin)->withSession(['mfa_verified_user_id' => $superAdmin->id])->post(route('platform.tenants.store'), [
             'name' => 'Empresa Nova',
             'slug' => 'empresa-nova',
             'plan' => 'professional',

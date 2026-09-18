@@ -70,10 +70,26 @@ SESSION_ENCRYPT=true
 SESSION_SECURE_COOKIE=true
 SESSION_HTTP_ONLY=true
 SESSION_SAME_SITE=lax
+AUDIT_RETENTION_DAYS=180
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 FILESYSTEM_DISK=uploads
 ```
+
+Configure também o SMTP da conta de envio para habilitar a recuperação de senha:
+
+```dotenv
+MAIL_MAILER=smtp
+MAIL_SCHEME=smtp
+MAIL_HOST=smtp.hostinger.com
+MAIL_PORT=587
+MAIL_USERNAME=contato@seudominio.com
+MAIL_PASSWORD=senha_exclusiva_do_email
+MAIL_FROM_ADDRESS=contato@seudominio.com
+MAIL_FROM_NAME="Catálogo SaaS"
+```
+
+Confirme no hPanel os dados SMTP e a porta da conta contratada. A aplicação sempre responde de forma genérica ao pedido de recuperação, sem revelar se um endereço está cadastrado.
 
 ## Primeiro deploy
 
@@ -144,6 +160,16 @@ php artisan optimize
 ```
 
 Os arquivos compilados dos templates já estão em `public/build`; não é necessário executar Node.js na Hostinger. Em seguida, entre no painel do cliente, acesse **Aparência**, selecione o template desejado e publique.
+
+### Controles de acesso e auditoria
+
+Após a migration de segurança, o próximo acesso de cada superadministrador exigirá a configuração de um aplicativo TOTP. Salve os códigos de recuperação fora do servidor. O menu **Auditoria** registra operações de escrita, tentativas rejeitadas, usuário, empresa, IP e agente do navegador, sem copiar senhas ou o conteúdo dos formulários.
+
+O cron `schedule:run` já descrito neste documento executa diariamente a retenção dos logs. O padrão é 180 dias. Para executar manualmente:
+
+```bash
+php artisan audit:prune
+```
 
 ## Itens necessários antes da operação comercial
 

@@ -35,9 +35,13 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        $destination = $user->isSuperAdmin() ? route('platform.dashboard') : route('admin.dashboard');
+        if ($user->isSuperAdmin()) {
+            $request->session()->forget('mfa_verified_user_id');
 
-        return redirect()->intended($destination);
+            return redirect()->route($user->two_factor_confirmed_at ? 'mfa.challenge' : 'platform.mfa.setup');
+        }
+
+        return redirect()->intended(route('admin.dashboard'));
     }
 
     public function destroy(Request $request)

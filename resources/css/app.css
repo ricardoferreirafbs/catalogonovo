@@ -253,13 +253,47 @@ img { display:block; max-width:100%; }
 .danger-zone label { color:#663c3c; font-size:.78rem; }
 .danger-zone input { min-height:44px; padding:10px 12px; border:1px solid #ddb5b5; border-radius:9px; outline:0; }
 .danger-button { min-height:44px; border:0; border-radius:9px; background:#a63636; color:#fff; font-weight:800; }
+.auth-link { color:var(--admin-brand); font-size:.82rem; font-weight:750; text-align:center; text-decoration:underline; text-underline-offset:4px; }
+.mfa-code-input { font-size:1.35rem!important; font-weight:850; letter-spacing:.18em; text-align:center; }
+.security-grid { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr); align-items:start; gap:20px; }
+.security-card,.recovery-card { padding:clamp(24px,4vw,42px); }
+.security-card h2,.recovery-card h2 { margin:0 0 14px; font-size:clamp(1.6rem,3vw,2.35rem); letter-spacing:-.045em; }
+.security-card h3 { margin:0 0 8px; }
+.security-lead,.security-card>p,.recovery-card>p { color:var(--muted); line-height:1.65; }
+.security-status { display:flex; align-items:center; gap:13px; margin-top:24px; padding:16px; border:1px solid #bfe4d9; border-radius:13px; background:#f2fbf8; }
+.security-status>span { display:grid; place-items:center; width:36px; height:36px; border-radius:50%; background:#187a5d; color:#fff; font-weight:900; }
+.security-status>div { display:grid; gap:3px; }
+.security-status small { color:var(--muted); }
+.security-divider { height:1px; margin:30px 0; background:var(--line); }
+.security-steps { display:grid; gap:12px; margin:25px 0; padding:0; list-style:none; }
+.security-steps li { display:flex; align-items:flex-start; gap:13px; padding:15px; border:1px solid var(--line); border-radius:12px; }
+.security-steps li>span { display:grid; place-items:center; flex:0 0 30px; height:30px; border-radius:9px; background:var(--admin-brand); color:#fff; font-weight:850; }
+.security-steps li>div { display:grid; min-width:0; gap:5px; }
+.security-steps small { color:var(--muted); }
+.security-steps code { overflow-wrap:anywhere; color:#172c48; font-size:.94rem; font-weight:850; letter-spacing:.08em; }
+.security-confirm-form { margin-top:24px; }
+.recovery-codes { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:20px 0; }
+.recovery-codes code { padding:11px; border:1px dashed #9db1aa; border-radius:8px; background:#f6f8f7; text-align:center; font-weight:850; letter-spacing:.08em; }
+.security-warning { padding:13px 14px; border-radius:10px; background:#fff5dd; color:#725416!important; font-size:.8rem; }
+.audit-panel { overflow:hidden; }
+.audit-heading { align-items:flex-end; padding:24px; }
+.audit-heading>div>p:last-child { margin-bottom:0; color:var(--muted); font-size:.82rem; }
+.audit-filters { display:flex; gap:9px; }
+.audit-filters input,.audit-filters select { min-height:44px; padding:0 12px; border:1px solid var(--line); border-radius:9px; background:#fff; }
+.audit-row { display:grid; grid-template-columns:115px minmax(210px,1.35fr) minmax(180px,1fr) minmax(120px,.75fr) 130px 100px; align-items:center; gap:16px; min-width:1050px; padding:14px 24px; border-top:1px solid #edf1ef; }
+.audit-table { overflow-x:auto; }
+.audit-row>span { display:grid; min-width:0; gap:3px; overflow-wrap:anywhere; }
+.audit-row small { color:var(--muted); font-size:.7rem; }
+.audit-head { color:var(--muted); background:#fafbfa; font-size:.68rem; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
+.audit-outcome { width:max-content; padding:6px 9px; border-radius:999px; background:#e8f5ef; color:#17694f; font-size:.69rem; font-weight:850; }
+.audit-outcome.rejected { background:#fff0f0; color:#a63636; }
 
 @media (max-width:1050px) {
   .product-grid { grid-template-columns:repeat(2,1fr); }
   .catalog-hero { gap:30px; }
   .hero-composition { transform:scale(.85); transform-origin:center; }
   .metric-grid { grid-template-columns:repeat(2,1fr); }
-  .admin-grid,.editor-grid,.theme-editor,.platform-form-grid { grid-template-columns:1fr; }
+  .admin-grid,.editor-grid,.theme-editor,.platform-form-grid,.security-grid { grid-template-columns:1fr; }
   .media-panel,.theme-preview { position:static; }
 }
 @media (max-width:760px) {

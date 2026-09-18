@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\AuditRequests;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantUser;
+use App\Http\Middleware\RequireSuperAdminMfa;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
@@ -16,10 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(SecurityHeaders::class);
+        $middleware->web(append: [AuditRequests::class]);
 
         $middleware->alias([
             'tenant' => ResolveTenant::class,
             'superadmin' => EnsureSuperAdmin::class,
+            'superadmin.mfa' => RequireSuperAdminMfa::class,
             'tenant.user' => EnsureTenantUser::class,
         ]);
     })

@@ -17,17 +17,17 @@ class PlatformAdministrationTest extends TestCase
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
         $tenantUser = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
-        $superAdmin = User::factory()->create(['tenant_id' => null, 'role' => 'superadmin']);
+        $superAdmin = $this->verifiedSuperAdmin();
 
         $this->actingAs($tenantUser)->get(route('platform.dashboard'))->assertForbidden();
-        $this->actingAs($superAdmin)->get(route('platform.dashboard'))->assertOk();
+        $this->actingAs($superAdmin)->withSession(['mfa_verified_user_id' => $superAdmin->id])->get(route('platform.dashboard'))->assertOk();
     }
 
     public function test_superadmin_can_create_a_tenant_and_its_owner(): void
     {
-        $superAdmin = User::factory()->create(['tenant_id' => null, 'role' => 'superadmin']);
+        $superAdmin = $this->verifiedSuperAdmin();
 
-        $response = $this->actingAs($superAdmin)->post(route('platform.tenants.store'), [
+        $response = $this->actingAs($superAdmin)->withSession(['mfa_verified_user_id' => $superAdmin->id])->post(route('platform.tenants.store'), [
             'name' => 'Empresa Nova',
             'slug' => 'empresa-nova',
             'custom_domain' => 'CATALOGO.EMPRESA.COM.BR',
@@ -72,17 +72,28 @@ class PlatformAdministrationTest extends TestCase
     public function test_superadmin_can_delete_a_tenant_after_typing_its_slug(): void
     {
         Storage::fake('uploads');
-        $superAdmin = User::factory()->create(['tenant_id' => null, 'role' => 'superadmin']);
+        $superAdmin = $this->verifiedSuperAdmin();
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
         $owner = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
         Storage::disk('uploads')->put("tenants/{$tenant->id}/products/item.jpg", 'imagem');
 
-        $this->actingAs($superAdmin)->delete(route('platform.tenants.destroy', $tenant), [
+        $this->actingAs($superAdmin)->withSession(['mfa_verified_user_id' => $superAdmin->id])->delete(route('platform.tenants.destroy', $tenant), [
             'confirmation' => 'cliente',
         ])->assertRedirect(route('platform.tenants.index'));
 
         $this->assertDatabaseMissing('tenants', ['id' => $tenant->id]);
         $this->assertDatabaseMissing('users', ['id' => $owner->id]);
         Storage::disk('uploads')->assertMissing("tenants/{$tenant->id}");
+    }
+
+    private function verifiedSuperAdmin(): User
+    {
+        return User::factory()->create([
+            'tenant_id' => null,
+            'role' => 'superadmin',
+            'two_factor_secret' => 'JBSWY3DPEHPK3PXP',
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
     }
 }

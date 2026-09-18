@@ -39,6 +39,11 @@ class SecurityHeaders
 
         $headers->remove('X-Powered-By');
 
+        if ($request->routeIs('login', 'password.*', 'mfa.*', 'platform.*', 'admin.*')) {
+            $headers->set('Cache-Control', 'no-store, private');
+            $headers->set('Pragma', 'no-cache');
+        }
+
         if (function_exists('header_remove')) {
             header_remove('X-Powered-By');
         }

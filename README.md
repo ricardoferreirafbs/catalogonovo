@@ -16,6 +16,9 @@ Plataforma multiempresa para publicar catálogos personalizados mantendo um úni
 - Menus livres para âncoras, páginas internas e endereços externos.
 - Contato por WhatsApp e produtos com preço sob consulta.
 - Comando seguro para provisionar novos clientes.
+- Recuperação de senha por link temporário, com resposta que não revela contas cadastradas.
+- Segundo fator TOTP obrigatório para superadministradores, com códigos de recuperação de uso único.
+- Trilha de auditoria para operações de escrita, tentativas rejeitadas, origem e responsável.
 - Configurações de referência para Nginx e Supervisor em VPS Hostinger.
 
 ## Requisitos
@@ -80,6 +83,8 @@ php artisan platform:admin administrador@seudominio.com --name="Administrador da
 
 Depois de entrar em `/entrar`, essa conta é direcionada para `/plataforma`. Nesse painel é possível cadastrar, editar, suspender, reativar e excluir empresas, além de criar ou redefinir o acesso do administrador de cada cliente. O comando `tenant:create` permanece disponível apenas para manutenção.
 
+No primeiro acesso, o superadministrador precisa cadastrar a chave TOTP em um aplicativo autenticador e salvar os códigos de recuperação. Os segredos são criptografados com `APP_KEY`; por isso, essa chave deve permanecer protegida e incluída no plano seguro de recuperação da infraestrutura.
+
 ## Construtor do catálogo
 
 No painel de cada empresa:
@@ -101,5 +106,7 @@ php artisan optimize
 Antes de produção, use `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, backup externo e uma senha exclusiva para o banco. Mantenha `SESSION_ENCRYPT=true`, `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true` e `SESSION_SAME_SITE=lax`.
 
 Instalações antigas devem remover a conta conhecida de demonstração com `php artisan security:remove-demo-account --force`. O comando preserva a empresa, os produtos e o catálogo.
+
+Para a recuperação de senha funcionar, configure um servidor SMTP real no `.env`. A trilha de auditoria mantém 180 dias por padrão, ajustáveis por `AUDIT_RETENTION_DAYS`, e é limpa diariamente pelo agendador do Laravel.
 
 Consulte [HOSTINGER.md](HOSTINGER.md) para a publicação.

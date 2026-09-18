@@ -17,11 +17,13 @@
             <form action="{{ route('login.store') }}" method="post" class="auth-card">
                 @csrf
                 <div><p class="eyebrow">Bem-vindo</p><h2>Acesse seu painel</h2><p>Use as credenciais da sua empresa.</p></div>
+                @if(session('success'))<div class="flash-message" role="status">✓ {{ session('success') }}</div>@endif
                 @if($errors->any())<div class="error-message" role="alert">{{ $errors->first() }}</div>@endif
                 <label>E-mail<input type="email" name="email" value="{{ old('email') }}" autocomplete="email" required autofocus placeholder="voce@empresa.com"></label>
                 <label>Senha<input type="password" name="password" autocomplete="current-password" required placeholder="••••••••"></label>
                 <label class="check-label"><input type="checkbox" name="remember" value="1"> Manter conectado</label>
                 <button type="submit" class="primary-button full-button">Entrar no painel</button>
+                <a class="auth-link" href="{{ route('password.request') }}">Esqueci minha senha</a>
             </form>
         </section>
     </main>
