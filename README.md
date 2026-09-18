@@ -17,7 +17,7 @@ Plataforma multiempresa para publicar catálogos personalizados mantendo um úni
 - Contato por WhatsApp e produtos com preço sob consulta.
 - Comando seguro para provisionar novos clientes.
 - Recuperação de senha por link temporário, com resposta que não revela contas cadastradas.
-- Segundo fator TOTP obrigatório para superadministradores, com códigos de recuperação de uso único.
+- Segundo fator TOTP obrigatório para superadministradores, cadastro por QR Code e códigos de recuperação de uso único.
 - Trilha de auditoria para operações de escrita, tentativas rejeitadas, origem e responsável.
 - Configurações de referência para Nginx e Supervisor em VPS Hostinger.
 

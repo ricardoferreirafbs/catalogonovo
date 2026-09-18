@@ -72,7 +72,10 @@ class AuthenticationSecurityTest extends TestCase
         $superAdmin = User::factory()->create(['tenant_id' => null, 'role' => 'superadmin']);
         $totp = app(TotpService::class);
 
-        $this->actingAs($superAdmin)->get(route('platform.mfa.setup'))->assertOk();
+        $this->actingAs($superAdmin)->get(route('platform.mfa.setup'))
+            ->assertOk()
+            ->assertSee('data:image/svg+xml;base64', false)
+            ->assertSee('Escaneie o QR Code');
         $superAdmin->refresh();
 
         $response = $this->post(route('platform.mfa.confirm'), [
@@ -146,6 +149,16 @@ class AuthenticationSecurityTest extends TestCase
 
         $this->assertSame('755224', $totp->code('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', 0));
         $this->assertTrue($totp->verify('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', '755224', 0, 0));
+    }
+
+    public function test_totp_provisioning_uri_can_be_rendered_as_an_svg_qr_code(): void
+    {
+        $totp = app(TotpService::class);
+        $uri = $totp->provisioningUri('JBSWY3DPEHPK3PXP', 'admin@example.com');
+        $dataUri = $totp->qrCodeDataUri($uri);
+
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', $dataUri);
+        $this->assertStringContainsString('<svg', base64_decode(substr($dataUri, strlen('data:image/svg+xml;base64,'))));
     }
 
     public function test_mutating_requests_are_recorded_without_form_contents(): void

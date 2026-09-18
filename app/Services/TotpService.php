@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\SvgWriter;
 use InvalidArgumentException;
 
 class TotpService
@@ -53,6 +56,16 @@ class TotpService
             'digits' => 6,
             'period' => 30,
         ], '', '&', PHP_QUERY_RFC3986);
+    }
+
+    public function qrCodeDataUri(string $provisioningUri): string
+    {
+        $qrCode = QrCode::create($provisioningUri)
+            ->setErrorCorrectionLevel(ErrorCorrectionLevel::Medium)
+            ->setSize(280)
+            ->setMargin(12);
+
+        return (new SvgWriter)->write($qrCode)->getDataUri();
     }
 
     public function generateRecoveryCodes(int $count = 8): array

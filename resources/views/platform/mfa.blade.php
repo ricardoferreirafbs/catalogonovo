@@ -23,10 +23,15 @@
                 <h2>Proteja a administração SaaS</h2>
                 <p class="security-lead">No Google Authenticator, Microsoft Authenticator ou aplicativo compatível, escolha adicionar uma chave de configuração.</p>
 
+                <div class="mfa-qr-panel">
+                    <img src="{{ $qrCodeDataUri }}" alt="QR Code para configurar o aplicativo autenticador" width="280" height="280">
+                    <div><strong>Escaneie o QR Code</strong><small>No aplicativo autenticador, toque em adicionar conta e escolha a opção de escanear QR Code.</small></div>
+                </div>
+
                 <ol class="security-steps">
-                    <li><span>1</span><div><strong>Adicione uma conta baseada em tempo</strong><small>Tipo da chave: baseada em tempo (TOTP).</small></div></li>
-                    <li><span>2</span><div><strong>Digite a chave abaixo</strong><code>{{ $user->two_factor_secret }}</code></div></li>
-                    <li><span>3</span><div><strong>Confirme o primeiro código</strong><small>Os códigos mudam a cada 30 segundos.</small></div></li>
+                    <li><span>1</span><div><strong>Prefere configurar manualmente?</strong><small>Escolha uma chave baseada em tempo (TOTP).</small></div></li>
+                    <li><span>2</span><div><strong>Digite esta chave</strong><code>{{ $user->two_factor_secret }}</code></div></li>
+                    <li><span>3</span><div><strong>Confirme o código gerado</strong><small>Os códigos mudam a cada 30 segundos.</small></div></li>
                 </ol>
 
                 <a class="secondary-button" href="{{ $provisioningUri }}">Abrir no autenticador</a>

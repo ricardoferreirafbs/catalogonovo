@@ -25,9 +25,12 @@ class MfaController extends Controller
             ])->save();
         }
 
+        $provisioningUri = $totp->provisioningUri((string) $user->two_factor_secret, $user->email);
+
         return view('platform.mfa', [
             'user' => $user->fresh(),
-            'provisioningUri' => $totp->provisioningUri((string) $user->two_factor_secret, $user->email),
+            'provisioningUri' => $provisioningUri,
+            'qrCodeDataUri' => $totp->qrCodeDataUri($provisioningUri),
         ]);
     }
 

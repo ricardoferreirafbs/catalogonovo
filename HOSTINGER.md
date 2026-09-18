@@ -163,7 +163,7 @@ Os arquivos compilados dos templates já estão em `public/build`; não é neces
 
 ### Controles de acesso e auditoria
 
-Após a migration de segurança, o próximo acesso de cada superadministrador exigirá a configuração de um aplicativo TOTP. Salve os códigos de recuperação fora do servidor. O menu **Auditoria** registra operações de escrita, tentativas rejeitadas, usuário, empresa, IP e agente do navegador, sem copiar senhas ou o conteúdo dos formulários.
+Após a migration de segurança, o próximo acesso de cada superadministrador exigirá a configuração de um aplicativo TOTP por QR Code ou chave manual. Salve os códigos de recuperação fora do servidor. O menu **Auditoria** registra operações de escrita, tentativas rejeitadas, usuário, empresa, IP e agente do navegador, sem copiar senhas ou o conteúdo dos formulários.
 
 O cron `schedule:run` já descrito neste documento executa diariamente a retenção dos logs. O padrão é 180 dias. Para executar manualmente:
 
