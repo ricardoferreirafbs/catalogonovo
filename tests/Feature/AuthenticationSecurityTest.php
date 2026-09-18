@@ -86,6 +86,7 @@ class AuthenticationSecurityTest extends TestCase
         $response->assertSessionHas('recovery_codes');
         $superAdmin->refresh();
         $this->assertNotNull($superAdmin->two_factor_confirmed_at);
+        $this->assertNotNull($superAdmin->two_factor_last_used_counter);
         $this->assertCount(8, $superAdmin->two_factor_recovery_codes);
         $this->assertNotEqualsCanonicalizing(
             session('recovery_codes'),
@@ -143,12 +144,36 @@ class AuthenticationSecurityTest extends TestCase
             ->assertSessionHasErrors('code');
     }
 
+    public function test_totp_code_can_only_be_used_once(): void
+    {
+        $totp = app(TotpService::class);
+        $secret = $totp->generateSecret();
+        $code = $totp->code($secret);
+        $superAdmin = User::factory()->create([
+            'tenant_id' => null,
+            'role' => 'superadmin',
+            'two_factor_secret' => $secret,
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($superAdmin)->post(route('mfa.verify'), ['code' => $code])
+            ->assertRedirect(route('platform.dashboard'));
+
+        $this->assertNotNull($superAdmin->fresh()->two_factor_last_used_counter);
+
+        $this->withSession(['mfa_verified_user_id' => null])
+            ->post(route('mfa.verify'), ['code' => $code])
+            ->assertSessionHasErrors('code');
+    }
+
     public function test_totp_matches_the_rfc_hotp_counter_zero_vector(): void
     {
         $totp = app(TotpService::class);
 
         $this->assertSame('755224', $totp->code('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', 0));
         $this->assertTrue($totp->verify('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', '755224', 0, 0));
+        $this->assertSame(0, $totp->matchingCounter('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', '755224', 0, 0));
     }
 
     public function test_totp_provisioning_uri_can_be_rendered_as_an_svg_qr_code(): void

@@ -55,6 +55,17 @@ class SecurityHardeningTest extends TestCase
         $this->assertStringContainsString("frame-ancestors 'none'", (string) $response->headers->get('Content-Security-Policy'));
     }
 
+    public function test_hosting_rules_preserve_the_complete_content_security_policy(): void
+    {
+        $rules = file_get_contents(base_path('.htaccess'));
+
+        $this->assertIsString($rules);
+        $this->assertStringContainsString("default-src 'self'", $rules);
+        $this->assertStringContainsString("object-src 'none'", $rules);
+        $this->assertStringContainsString("frame-ancestors 'none'", $rules);
+        $this->assertStringContainsString("form-action 'self'", $rules);
+    }
+
     public function test_dangerous_menu_url_is_rejected(): void
     {
         [$tenant, $owner] = $this->tenantOwner();

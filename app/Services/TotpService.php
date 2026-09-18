@@ -18,25 +18,32 @@ class TotpService
 
     public function verify(string $secret, string $code, ?int $timestamp = null, int $window = 1): bool
     {
+        return $this->matchingCounter($secret, $code, $timestamp, $window) !== null;
+    }
+
+    public function matchingCounter(string $secret, string $code, ?int $timestamp = null, int $window = 1): ?int
+    {
         $code = preg_replace('/\s+/', '', $code) ?? '';
 
         if (! preg_match('/^\d{6}$/', $code)) {
-            return false;
+            return null;
         }
 
         $counter = intdiv($timestamp ?? time(), 30);
 
         try {
             for ($offset = -$window; $offset <= $window; $offset++) {
-                if (hash_equals($this->codeForCounter($secret, $counter + $offset), $code)) {
-                    return true;
+                $candidateCounter = $counter + $offset;
+
+                if (hash_equals($this->codeForCounter($secret, $candidateCounter), $code)) {
+                    return $candidateCounter;
                 }
             }
         } catch (InvalidArgumentException) {
-            return false;
+            return null;
         }
 
-        return false;
+        return null;
     }
 
     public function code(string $secret, ?int $timestamp = null): string
