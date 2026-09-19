@@ -52,6 +52,7 @@ class TenantController extends Controller
                 'email' => strtolower($data['admin_email']),
                 'password' => Hash::make($data['admin_password']),
                 'role' => 'owner',
+                'invitation_accepted_at' => now(),
             ]);
 
             return $tenant;
@@ -80,6 +81,7 @@ class TenantController extends Controller
                 'name' => $data['admin_name'],
                 'email' => strtolower($data['admin_email']),
                 'role' => 'owner',
+                'invitation_accepted_at' => $owner?->invitation_accepted_at ?? now(),
             ];
 
             if (! empty($data['admin_password'])) {

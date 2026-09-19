@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AuditRequests;
 use App\Http\Middleware\EnsureSuperAdmin;
+use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\EnsureTenantUser;
 use App\Http\Middleware\RequireMfaVerified;
 use App\Http\Middleware\RequireSuperAdminMfa;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin.mfa' => RequireSuperAdminMfa::class,
             'tenant.user' => EnsureTenantUser::class,
             'mfa.verified' => RequireMfaVerified::class,
+            'permission' => EnsurePermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -29,7 +29,7 @@ class CatalogPlatformTest extends TestCase
     {
         $tenant = Tenant::create(['name' => 'Cliente A', 'slug' => 'cliente-a']);
         $other = Tenant::create(['name' => 'Cliente B', 'slug' => 'cliente-b']);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
         $product = Product::create(['tenant_id' => $other->id, 'name' => 'Produto B', 'slug' => 'produto-b']);
 
         $this->actingAs($user)->put(route('admin.products.update', $product), [
@@ -43,7 +43,7 @@ class CatalogPlatformTest extends TestCase
     {
         $tenant = Tenant::create(['name' => 'Cliente A', 'slug' => 'cliente-a']);
         $other = Tenant::create(['name' => 'Cliente B', 'slug' => 'cliente-b']);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
         $foreignCategory = Category::create(['tenant_id' => $other->id, 'name' => 'Privada', 'slug' => 'privada']);
 
         $this->actingAs($user)->post(route('admin.products.store'), [
@@ -57,7 +57,7 @@ class CatalogPlatformTest extends TestCase
     {
         $tenant = Tenant::create(['name' => 'Cliente A', 'slug' => 'cliente-a']);
         $other = Tenant::create(['name' => 'Cliente B', 'slug' => 'cliente-b', 'theme' => ['primary' => '#000000']]);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
 
         $this->actingAs($user)->put(route('admin.theme.update'), [
             'primary' => '#173f35', 'accent' => '#e48a4a', 'surface' => '#f4f6f3',
@@ -92,7 +92,7 @@ class CatalogPlatformTest extends TestCase
     public function test_category_hierarchy_is_limited_to_four_levels(): void
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'editor']);
         $level1 = Category::create(['tenant_id' => $tenant->id, 'name' => 'Nível 1', 'slug' => 'nivel-1']);
         $level2 = Category::create(['tenant_id' => $tenant->id, 'parent_id' => $level1->id, 'name' => 'Nível 2', 'slug' => 'nivel-2']);
         $level3 = Category::create(['tenant_id' => $tenant->id, 'parent_id' => $level2->id, 'name' => 'Nível 3', 'slug' => 'nivel-3']);
@@ -108,7 +108,7 @@ class CatalogPlatformTest extends TestCase
     public function test_tenant_user_can_publish_a_category_as_main_menu(): void
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'editor']);
 
         $this->actingAs($user)->post(route('admin.categories.store'), [
             'name' => 'Coleções', 'is_active' => 1, 'show_in_menu' => 1,
@@ -121,7 +121,7 @@ class CatalogPlatformTest extends TestCase
     {
         $tenant = Tenant::create(['name' => 'Cliente A', 'slug' => 'cliente-a']);
         $other = Tenant::create(['name' => 'Cliente B', 'slug' => 'cliente-b', 'content' => ['hero_title' => 'Original B']]);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'editor']);
 
         $this->actingAs($user)->put(route('admin.content.update'), [
             'hero_title' => 'Nova capa do Cliente A', 'hero_text' => 'Texto personalizado.', 'show_stats' => 1,
@@ -145,7 +145,7 @@ class CatalogPlatformTest extends TestCase
     public function test_catalog_builder_pages_are_available_to_tenant_users(): void
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
         Category::create(['tenant_id' => $tenant->id, 'name' => 'Principal', 'slug' => 'principal', 'show_in_menu' => true]);
 
         $this->actingAs($user)->get(route('admin.categories.index'))->assertOk()->assertSee('Até quatro níveis');
@@ -156,7 +156,7 @@ class CatalogPlatformTest extends TestCase
     public function test_appearance_editor_exposes_original_palettes_and_realistic_preview(): void
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
 
         $this->actingAs($user)->get(route('admin.theme.edit'))
             ->assertOk()
@@ -232,7 +232,7 @@ class CatalogPlatformTest extends TestCase
     public function test_signature_template_can_be_published_from_appearance_editor(): void
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
-        $user = User::factory()->create(['tenant_id' => $tenant->id]);
+        $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
 
         $this->actingAs($user)->put(route('admin.theme.update'), [
             'template' => 'aurea',

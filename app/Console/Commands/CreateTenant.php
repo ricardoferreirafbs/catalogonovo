@@ -70,6 +70,7 @@ class CreateTenant extends Command
                     'email' => $email,
                     'password' => Hash::make($password),
                     'role' => 'owner',
+                    'invitation_accepted_at' => now(),
                 ]);
 
                 return $tenant;

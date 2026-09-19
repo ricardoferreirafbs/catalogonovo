@@ -10,22 +10,22 @@
 
     <section class="admin-grid">
         <div class="panel-card wide-panel">
-            <div class="panel-heading"><div><p class="eyebrow">Conteúdo</p><h2>Produtos recentes</h2></div><a href="{{ route('admin.products.create') }}" class="secondary-button">+ Novo produto</a></div>
+            <div class="panel-heading"><div><p class="eyebrow">Conteúdo</p><h2>Produtos recentes</h2></div>@if(auth()->user()->hasPermission('products.manage'))<a href="{{ route('admin.products.create') }}" class="secondary-button">+ Novo produto</a>@endif</div>
             <div class="data-list">
                 @forelse($recentProducts as $product)
-                    <a href="{{ route('admin.products.edit', $product) }}" class="data-row">
+                    <div class="data-row">
                         <span class="item-thumb">{{ mb_substr($product->name, 0, 1) }}</span>
                         <span class="item-main"><strong>{{ $product->name }}</strong><small>{{ $product->category?->name ?? 'Sem categoria' }} · {{ $product->sku ?: 'Sem código' }}</small></span>
                         <span class="status {{ $product->status }}">{{ $product->status === 'published' ? 'Publicado' : 'Rascunho' }}</span>
                         <span class="row-arrow">›</span>
-                    </a>
+                    </div>
                 @empty
                     <div class="empty-inline">Ainda não há produtos. Comece pelo primeiro cadastro.</div>
                 @endforelse
             </div>
         </div>
 
-        <div class="panel-card quick-panel">
+        @if(auth()->user()->hasPermission('structure.manage'))<div class="panel-card quick-panel">
             <p class="eyebrow">Atalho</p><h2>Nova categoria</h2><p>Organize os produtos para facilitar a navegação.</p>
             <form action="{{ route('admin.categories.store') }}" method="post" class="stack-form">
                 @csrf
@@ -38,6 +38,6 @@
                     <span>{{ $category->name }} <small>{{ $category->products()->count() }}</small></span>
                 @endforeach
             </div>
-        </div>
+        </div>@endif
     </section>
 @endsection

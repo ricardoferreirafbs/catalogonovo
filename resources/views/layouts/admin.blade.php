@@ -14,14 +14,15 @@
             <a href="{{ route('admin.dashboard') }}" class="admin-brand"><span class="brand-mark">C</span><span>Catálogo<span class="brand-accent">.</span></span></a>
             <div class="tenant-chip">
                 <span>{{ mb_substr(auth()->user()->tenant->name, 0, 1) }}</span>
-                <div><strong>{{ auth()->user()->tenant->name }}</strong><small>Plano {{ ucfirst(auth()->user()->tenant->plan) }}</small></div>
+                <div><strong>{{ auth()->user()->tenant->name }}</strong><small>{{ auth()->user()->roleLabel() }} · Plano {{ ucfirst(auth()->user()->tenant->plan) }}</small></div>
             </div>
             <nav class="sidebar-nav" aria-label="Menu do painel">
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span>⌂</span> Visão geral</a>
-                <a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}"><span>□</span> Produtos</a>
-                <a class="{{ request()->routeIs('admin.categories.*') || request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}"><span>☷</span> Estrutura</a>
-                <a class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}" href="{{ route('admin.content.edit') }}"><span>✎</span> Conteúdo</a>
-                <a class="{{ request()->routeIs('admin.theme.*') ? 'active' : '' }}" href="{{ route('admin.theme.edit') }}"><span>◐</span> Aparência</a>
+                @if(auth()->user()->hasPermission('products.view'))<a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}"><span>□</span> Produtos</a>@endif
+                @if(auth()->user()->hasPermission('structure.manage'))<a class="{{ request()->routeIs('admin.categories.*') || request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}"><span>☷</span> Estrutura</a>@endif
+                @if(auth()->user()->hasPermission('content.manage'))<a class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}" href="{{ route('admin.content.edit') }}"><span>✎</span> Conteúdo</a>@endif
+                @if(auth()->user()->hasPermission('appearance.manage'))<a class="{{ request()->routeIs('admin.theme.*') ? 'active' : '' }}" href="{{ route('admin.theme.edit') }}"><span>◐</span> Aparência</a>@endif
+                @if(auth()->user()->hasPermission('users.view'))<a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><span>♙</span> Usuários</a>@endif
                 <a class="{{ request()->routeIs('admin.mfa.*') ? 'active' : '' }}" href="{{ route('admin.mfa.setup') }}"><span>◇</span> Segurança</a>
                 <a href="{{ auth()->user()->tenant->catalogUrl() }}" target="_blank" rel="noopener"><span>↗</span> Abrir catálogo</a>
             </nav>

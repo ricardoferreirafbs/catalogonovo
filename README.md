@@ -87,6 +87,8 @@ No primeiro acesso, o superadministrador precisa cadastrar a chave TOTP em um ap
 
 Os usuários das empresas podem ativar voluntariamente o segundo fator em **Painel → Segurança**. A configuração oferece QR Code, chave manual e oito códigos de recuperação de uso único. Depois de ativado, o segundo fator é exigido em toda nova sessão e nas rotas administrativas; a desativação exige a senha atual e um código válido.
 
+Cada empresa possui quatro papéis fixos: **Proprietário**, **Administrador**, **Editor** e **Visualizador**. Proprietários administram toda a equipe; administradores podem convidar e gerenciar editores e visualizadores; editores cuidam dos produtos, estrutura e conteúdo; visualizadores possuem acesso somente de leitura. Os convites são enviados por e-mail com link temporário para definição da senha e nenhuma senha é transmitida na mensagem.
+
 ## Construtor do catálogo
 
 No painel de cada empresa:

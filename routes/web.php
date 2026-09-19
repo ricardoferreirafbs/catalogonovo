@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ThemeController;
+use App\Http\Controllers\Admin\TenantUserController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\MfaChallengeController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -47,18 +48,42 @@ Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user'])->gr
 
 Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'mfa.verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
-    Route::resource('produtos', ProductController::class)->except('show')->parameters(['produtos' => 'product'])->names('products');
-    Route::get('/estrutura', [CategoryController::class, 'index'])->name('categories.index');
-    Route::post('/categorias', [CategoryController::class, 'store'])->name('categories.store');
-    Route::put('/categorias/{category}', [CategoryController::class, 'update'])->name('categories.update');
-    Route::delete('/categorias/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-    Route::post('/menus', [MenuItemController::class, 'store'])->name('menus.store');
-    Route::put('/menus/{menuItem}', [MenuItemController::class, 'update'])->name('menus.update');
-    Route::delete('/menus/{menuItem}', [MenuItemController::class, 'destroy'])->name('menus.destroy');
-    Route::get('/conteudo', [ContentController::class, 'edit'])->name('content.edit');
-    Route::put('/conteudo', [ContentController::class, 'update'])->name('content.update');
-    Route::get('/aparencia', [ThemeController::class, 'edit'])->name('theme.edit');
-    Route::put('/aparencia', [ThemeController::class, 'update'])->name('theme.update');
+
+    Route::middleware('permission:products.view')->group(function () {
+        Route::get('/produtos', [ProductController::class, 'index'])->name('products.index');
+    });
+    Route::middleware('permission:products.manage')->group(function () {
+        Route::get('/produtos/novo', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/produtos', [ProductController::class, 'store'])->name('products.store');
+        Route::get('/produtos/{product}/editar', [ProductController::class, 'edit'])->name('products.edit');
+        Route::put('/produtos/{product}', [ProductController::class, 'update'])->name('products.update');
+    });
+    Route::delete('/produtos/{product}', [ProductController::class, 'destroy'])->middleware('permission:products.delete')->name('products.destroy');
+
+    Route::middleware('permission:structure.manage')->group(function () {
+        Route::get('/estrutura', [CategoryController::class, 'index'])->name('categories.index');
+        Route::post('/categorias', [CategoryController::class, 'store'])->name('categories.store');
+        Route::put('/categorias/{category}', [CategoryController::class, 'update'])->name('categories.update');
+        Route::delete('/categorias/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+        Route::post('/menus', [MenuItemController::class, 'store'])->name('menus.store');
+        Route::put('/menus/{menuItem}', [MenuItemController::class, 'update'])->name('menus.update');
+        Route::delete('/menus/{menuItem}', [MenuItemController::class, 'destroy'])->name('menus.destroy');
+    });
+
+    Route::middleware('permission:content.manage')->group(function () {
+        Route::get('/conteudo', [ContentController::class, 'edit'])->name('content.edit');
+        Route::put('/conteudo', [ContentController::class, 'update'])->name('content.update');
+    });
+    Route::middleware('permission:appearance.manage')->group(function () {
+        Route::get('/aparencia', [ThemeController::class, 'edit'])->name('theme.edit');
+        Route::put('/aparencia', [ThemeController::class, 'update'])->name('theme.update');
+    });
+
+    Route::get('/usuarios', [TenantUserController::class, 'index'])->middleware('permission:users.view')->name('users.index');
+    Route::post('/usuarios', [TenantUserController::class, 'store'])->middleware('permission:users.invite')->name('users.store');
+    Route::patch('/usuarios/{user}', [TenantUserController::class, 'update'])->middleware('permission:users.update')->name('users.update');
+    Route::delete('/usuarios/{user}', [TenantUserController::class, 'destroy'])->middleware('permission:users.remove')->name('users.destroy');
+    Route::post('/usuarios/{user}/reenviar-convite', [TenantUserController::class, 'resend'])->middleware('permission:users.invite')->name('users.resend');
 });
 
 Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin'])->group(function () {

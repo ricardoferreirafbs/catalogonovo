@@ -36,6 +36,8 @@ class ResetPasswordController extends Controller
                 $user->forceFill([
                     'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
+                    'email_verified_at' => $user->email_verified_at ?? now(),
+                    'invitation_accepted_at' => $user->invitation_accepted_at ?? now(),
                 ])->save();
 
                 DB::table('sessions')->where('user_id', $user->id)->delete();

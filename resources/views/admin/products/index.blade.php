@@ -3,7 +3,7 @@
 @section('content')
     <div class="action-bar">
         <p>{{ $products->total() }} itens cadastrados. Valores e fotos seguem o mesmo padrão para toda a plataforma.</p>
-        <a href="{{ route('admin.products.create') }}" class="primary-button">+ Novo produto</a>
+        @if(auth()->user()->hasPermission('products.manage'))<a href="{{ route('admin.products.create') }}" class="primary-button">+ Novo produto</a>@endif
     </div>
     <section class="panel-card product-table-card">
         <div class="product-admin-list">
@@ -14,8 +14,9 @@
                     <div class="admin-price">{{ $product->current_price ? 'R$ '.number_format($product->current_price, 2, ',', '.') : 'Sob consulta' }}</div>
                     <span class="status {{ $product->status }}">{{ $product->status === 'published' ? 'Publicado' : 'Rascunho' }}</span>
                     <div class="row-actions">
-                        <a href="{{ route('admin.products.edit', $product) }}">Editar</a>
-                        <form method="post" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('Excluir este produto?')">@csrf @method('DELETE')<button type="submit">Excluir</button></form>
+                        @if(auth()->user()->hasPermission('products.manage'))<a href="{{ route('admin.products.edit', $product) }}">Editar</a>@endif
+                        @if(auth()->user()->hasPermission('products.delete'))<form method="post" action="{{ route('admin.products.destroy', $product) }}" onsubmit="return confirm('Excluir este produto?')">@csrf @method('DELETE')<button type="submit">Excluir</button></form>@endif
+                        @if(! auth()->user()->hasPermission('products.manage'))<small>Somente leitura</small>@endif
                     </div>
                 </article>
             @empty

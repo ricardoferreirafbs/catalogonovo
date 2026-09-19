@@ -32,7 +32,7 @@ class ProductController extends Controller
         $tenant = auth()->user()->tenant;
         $data = $this->validated($request, $tenant->id);
         $data['tenant_id'] = $tenant->id;
-        $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
+        $data['slug'] = ($data['slug'] ?? null) ?: Str::slug($data['name']);
         $data['featured'] = $request->boolean('featured');
         $product = Product::create($data);
         $this->storeImage($request, $product);
@@ -52,7 +52,7 @@ class ProductController extends Controller
     {
         $this->authorizeTenant($product);
         $data = $this->validated($request, $product->tenant_id, $product->id);
-        $data['slug'] = $data['slug'] ?: Str::slug($data['name']);
+        $data['slug'] = ($data['slug'] ?? null) ?: Str::slug($data['name']);
         $data['featured'] = $request->boolean('featured');
         $product->update($data);
         $this->storeImage($request, $product);
