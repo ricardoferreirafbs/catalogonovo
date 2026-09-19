@@ -19,6 +19,23 @@ img { display:block; max-width:100%; }
 .secondary-button { border:1px solid var(--line); background:#fff; color:var(--ink); }
 .full-button { width:100%; }
 
+/* Friendly error references */
+.catalog-error-body { min-height:100vh; background:radial-gradient(circle at 15% 15%,rgba(242,154,91,.17),transparent 32%),#eef3f0; }
+.catalog-error-shell { min-height:100vh; display:grid; place-items:center; padding:32px 20px; }
+.catalog-error-card { width:min(720px,100%); padding:clamp(28px,6vw,62px); border:1px solid #d8e2dd; border-radius:26px; background:#fff; box-shadow:0 28px 80px rgba(18,60,50,.13); }
+.catalog-error-brand { margin-bottom:48px; }
+.catalog-error-brand .brand-mark { background:var(--admin-brand); color:#fff; }
+.catalog-error-status { float:right; margin:-18px 0 20px 30px; color:#e4ebe7; font-size:clamp(5rem,16vw,9rem); font-weight:950; line-height:.8; letter-spacing:-.09em; }
+.catalog-error-card h1 { max-width:540px; margin:0; font-size:clamp(2.1rem,5vw,3.8rem); line-height:1; letter-spacing:-.055em; }
+.catalog-error-message { max-width:590px; margin:20px 0 30px; color:var(--muted); font-size:1.02rem; line-height:1.7; }
+.catalog-error-references { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0; }
+.catalog-error-references div { min-width:0; padding:16px 18px; border:1px solid var(--line); border-radius:13px; background:#f7f9f8; }
+.catalog-error-references dt { margin-bottom:6px; color:var(--muted); font-size:.7rem; font-weight:750; letter-spacing:.04em; text-transform:uppercase; }
+.catalog-error-references dd { overflow-wrap:anywhere; margin:0; color:var(--admin-brand); font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.96rem; font-weight:850; letter-spacing:.04em; }
+.catalog-error-help { margin:18px 0 0; color:var(--muted); font-size:.78rem; line-height:1.55; }
+.catalog-error-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:32px; }
+@media(max-width:600px){.catalog-error-status{float:none;margin:0 0 25px;font-size:5rem}.catalog-error-brand{margin-bottom:35px}.catalog-error-references{grid-template-columns:1fr}.catalog-error-actions{align-items:stretch;flex-direction:column}.catalog-error-actions a{width:100%}}
+
 /* Public catalog */
 .catalog-body { --body-font:Inter,ui-sans-serif,system-ui,sans-serif; background:var(--surface); font-family:var(--body-font); }
 .catalog-body.font-classic { --body-font:Georgia,"Times New Roman",serif; }

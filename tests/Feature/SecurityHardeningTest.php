@@ -37,10 +37,14 @@ class SecurityHardeningTest extends TestCase
             ])->assertRedirect();
         }
 
-        $this->post(route('login.store'), [
+        $response = $this->post(route('login.store'), [
             'email' => 'limite@example.com',
             'password' => 'senha-incorreta',
-        ])->assertTooManyRequests();
+        ]);
+
+        $response->assertTooManyRequests()
+            ->assertSee('CAT-429-LIMITE')
+            ->assertHeader('X-Error-Code', 'CAT-429-LIMITE');
     }
 
     public function test_responses_include_baseline_security_headers(): void
