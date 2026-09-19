@@ -85,6 +85,8 @@ Depois de entrar em `/entrar`, essa conta é direcionada para `/plataforma`. Nes
 
 No primeiro acesso, o superadministrador precisa cadastrar a chave TOTP em um aplicativo autenticador e salvar os códigos de recuperação. Os segredos são criptografados com `APP_KEY`; por isso, essa chave deve permanecer protegida e incluída no plano seguro de recuperação da infraestrutura.
 
+Os usuários das empresas podem ativar voluntariamente o segundo fator em **Painel → Segurança**. A configuração oferece QR Code, chave manual e oito códigos de recuperação de uso único. Depois de ativado, o segundo fator é exigido em toda nova sessão e nas rotas administrativas; a desativação exige a senha atual e um código válido.
+
 ## Construtor do catálogo
 
 No painel de cada empresa:

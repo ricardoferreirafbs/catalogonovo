@@ -39,6 +39,13 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user'])->group(function () {
+    Route::get('/seguranca/2fa', [MfaController::class, 'create'])->name('mfa.setup');
+    Route::post('/seguranca/2fa', [MfaController::class, 'confirm'])->middleware('throttle:mfa')->name('mfa.confirm');
+    Route::post('/seguranca/2fa/recuperacao', [MfaController::class, 'regenerateRecoveryCodes'])->middleware(['mfa.verified', 'throttle:mfa'])->name('mfa.recovery');
+    Route::delete('/seguranca/2fa', [MfaController::class, 'destroy'])->middleware(['mfa.verified', 'throttle:mfa'])->name('mfa.destroy');
+});
+
+Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'mfa.verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::resource('produtos', ProductController::class)->except('show')->parameters(['produtos' => 'product'])->names('products');
     Route::get('/estrutura', [CategoryController::class, 'index'])->name('categories.index');

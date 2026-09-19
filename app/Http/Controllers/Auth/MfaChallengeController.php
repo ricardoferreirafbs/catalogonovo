@@ -13,10 +13,12 @@ class MfaChallengeController extends Controller
 {
     public function create(Request $request)
     {
-        abort_unless($request->user()?->isSuperAdmin(), 403);
+        $user = $request->user();
 
-        if (! $request->user()->two_factor_confirmed_at) {
-            return redirect()->route('platform.mfa.setup');
+        abort_unless($user?->isSuperAdmin() || $user?->tenant?->status === 'active', 403);
+
+        if (! $user->two_factor_confirmed_at) {
+            return redirect()->route($this->setupRoute($user));
         }
 
         return view('auth.mfa-challenge');
@@ -28,7 +30,10 @@ class MfaChallengeController extends Controller
 
         $valid = DB::transaction(function () use ($request, $totp, $data): bool {
             $user = User::query()->lockForUpdate()->findOrFail($request->user()->id);
-            abort_unless($user->isSuperAdmin() && $user->two_factor_confirmed_at, 403);
+            abort_unless(
+                ($user->isSuperAdmin() || $user->tenant?->status === 'active') && $user->two_factor_confirmed_at,
+                403
+            );
 
             $counter = $totp->matchingCounter((string) $user->two_factor_secret, $data['code']);
 
@@ -62,6 +67,16 @@ class MfaChallengeController extends Controller
         $request->session()->regenerate();
         $request->session()->put('mfa_verified_user_id', $request->user()->id);
 
-        return redirect()->intended(route('platform.dashboard'));
+        return redirect()->intended(route($this->dashboardRoute($request->user())));
+    }
+
+    private function setupRoute(User $user): string
+    {
+        return $user->isSuperAdmin() ? 'platform.mfa.setup' : 'admin.mfa.setup';
+    }
+
+    private function dashboardRoute(User $user): string
+    {
+        return $user->isSuperAdmin() ? 'platform.dashboard' : 'admin.dashboard';
     }
 }

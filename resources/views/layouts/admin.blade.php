@@ -22,6 +22,7 @@
                 <a class="{{ request()->routeIs('admin.categories.*') || request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}"><span>☷</span> Estrutura</a>
                 <a class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}" href="{{ route('admin.content.edit') }}"><span>✎</span> Conteúdo</a>
                 <a class="{{ request()->routeIs('admin.theme.*') ? 'active' : '' }}" href="{{ route('admin.theme.edit') }}"><span>◐</span> Aparência</a>
+                <a class="{{ request()->routeIs('admin.mfa.*') ? 'active' : '' }}" href="{{ route('admin.mfa.setup') }}"><span>◇</span> Segurança</a>
                 <a href="{{ auth()->user()->tenant->catalogUrl() }}" target="_blank" rel="noopener"><span>↗</span> Abrir catálogo</a>
             </nav>
             <form action="{{ route('logout') }}" method="post" class="sidebar-logout">

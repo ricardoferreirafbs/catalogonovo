@@ -122,6 +122,91 @@ class AuthenticationSecurityTest extends TestCase
         $this->get(route('platform.dashboard'))->assertOk();
     }
 
+    public function test_tenant_user_can_configure_mfa_with_qr_code(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
+        $totp = app(TotpService::class);
+
+        $this->actingAs($owner)->get(route('admin.mfa.setup'))
+            ->assertOk()
+            ->assertSee('data:image/svg+xml;base64', false)
+            ->assertSee('Proteja sua conta e seu catálogo');
+
+        $owner->refresh();
+
+        $this->post(route('admin.mfa.confirm'), [
+            'code' => $totp->code($owner->two_factor_secret),
+        ])->assertRedirect(route('admin.mfa.setup'))
+            ->assertSessionHas('recovery_codes');
+
+        $owner->refresh();
+        $this->assertNotNull($owner->two_factor_confirmed_at);
+        $this->assertCount(8, $owner->two_factor_recovery_codes);
+        $this->get(route('admin.mfa.setup'))
+            ->assertOk()
+            ->assertSee('Desativar segundo fator')
+            ->assertSee('Gerar novos códigos de recuperação');
+        $this->get(route('admin.dashboard'))->assertOk();
+    }
+
+    public function test_confirmed_tenant_user_must_complete_mfa_challenge_after_login(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $totp = app(TotpService::class);
+        $secret = $totp->generateSecret();
+        $owner = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'email' => 'protegido@example.com',
+            'password' => Hash::make('Senha-Segura2026!'),
+            'two_factor_secret' => $secret,
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => $owner->email,
+            'password' => 'Senha-Segura2026!',
+        ])->assertRedirect(route('mfa.challenge'));
+
+        $this->get(route('admin.dashboard'))->assertRedirect(route('mfa.challenge'));
+
+        $this->post(route('mfa.verify'), [
+            'code' => $totp->code($secret),
+        ])->assertRedirect(route('admin.dashboard'));
+
+        $this->get(route('admin.dashboard'))->assertOk();
+    }
+
+    public function test_tenant_user_can_disable_mfa_with_password_and_recovery_code(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $totp = app(TotpService::class);
+        $recoveryCode = 'CLIENTE-2026';
+        $owner = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'password' => Hash::make('Senha-Segura2026!'),
+            'two_factor_secret' => $totp->generateSecret(),
+            'two_factor_recovery_codes' => [$totp->hashRecoveryCode($recoveryCode)],
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($owner)
+            ->withSession(['mfa_verified_user_id' => $owner->id])
+            ->delete(route('admin.mfa.destroy'), [
+                'password' => 'Senha-Segura2026!',
+                'code' => $recoveryCode,
+            ])->assertRedirect(route('admin.mfa.setup'));
+
+        $owner->refresh();
+        $this->assertNull($owner->two_factor_secret);
+        $this->assertNull($owner->two_factor_recovery_codes);
+        $this->assertNull($owner->two_factor_confirmed_at);
+        $this->assertNull($owner->two_factor_last_used_counter);
+    }
+
     public function test_recovery_code_can_only_be_used_once(): void
     {
         $totp = app(TotpService::class);

@@ -34,11 +34,14 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->forget('mfa_verified_user_id');
 
         if ($user->isSuperAdmin()) {
-            $request->session()->forget('mfa_verified_user_id');
-
             return redirect()->route($user->two_factor_confirmed_at ? 'mfa.challenge' : 'platform.mfa.setup');
+        }
+
+        if ($user->two_factor_confirmed_at) {
+            return redirect()->route('mfa.challenge');
         }
 
         return redirect()->intended(route('admin.dashboard'));

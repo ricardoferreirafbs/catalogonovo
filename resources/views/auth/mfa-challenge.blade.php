@@ -11,7 +11,7 @@
     <main class="login-shell">
         <section class="login-panel">
             <span class="admin-brand"><span class="brand-mark">C</span><span>Catálogo<span class="brand-accent">.</span></span></span>
-            <div class="login-copy"><p class="eyebrow">Verificação adicional</p><h1>Proteção em<br>duas etapas.</h1><p>Confirme o código do aplicativo autenticador para acessar a administração SaaS.</p></div>
+            <div class="login-copy"><p class="eyebrow">Verificação adicional</p><h1>Proteção em<br>duas etapas.</h1><p>Confirme o código do aplicativo autenticador para acessar seu painel com segurança.</p></div>
             <div class="login-pattern" aria-hidden="true"></div>
         </section>
         <section class="login-form-wrap">
