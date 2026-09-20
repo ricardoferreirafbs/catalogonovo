@@ -88,4 +88,29 @@ class ErrorReferenceTest extends TestCase
             ->assertSee('Atualize a página')
             ->assertHeader('X-Error-Code', 'CAT-419-SESSAO');
     }
+
+    public function test_error_help_center_is_public_and_lists_all_references(): void
+    {
+        $response = $this->get(route('help.errors'));
+
+        $response->assertOk()
+            ->assertSee('Central de ajuda')
+            ->assertSee('CAT-401-AUTENTICACAO')
+            ->assertSee('CAT-403-ACESSO')
+            ->assertSee('CAT-404-RECURSO')
+            ->assertSee('CAT-419-SESSAO')
+            ->assertSee('CAT-429-LIMITE')
+            ->assertSee('CAT-500-INTERNO')
+            ->assertSee('CAT-503-INDISPONIVEL')
+            ->assertSee('nunca deve pedir sua senha', escape: false);
+    }
+
+    public function test_error_page_links_to_the_matching_faq_reference(): void
+    {
+        $response = $this->get('/pagina-inexistente-para-ajuda');
+
+        $response->assertNotFound()
+            ->assertSee(route('help.errors', ['codigo' => 'CAT-404-RECURSO']), escape: false)
+            ->assertSee('Consultar este erro na FAQ');
+    }
 }

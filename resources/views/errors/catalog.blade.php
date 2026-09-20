@@ -34,12 +34,12 @@
             <p class="catalog-error-help">Se precisar de atendimento, informe o código e o protocolo acima. Não envie sua senha nem o código do autenticador.</p>
 
             <div class="catalog-error-actions">
+                <a class="primary-button" href="{{ route('help.errors', ['codigo' => $errorCode]) }}">Consultar este erro na FAQ</a>
                 @auth
-                    <a class="primary-button" href="{{ auth()->user()->isSuperAdmin() ? route('platform.dashboard') : route('admin.dashboard') }}">Voltar ao painel</a>
+                    <a class="secondary-button" href="{{ auth()->user()->isSuperAdmin() ? route('platform.dashboard') : route('admin.dashboard') }}">Voltar ao painel</a>
                 @else
-                    <a class="primary-button" href="{{ route('login') }}">Entrar novamente</a>
+                    <a class="secondary-button" href="{{ route('login') }}">Entrar novamente</a>
                 @endauth
-                <a class="secondary-button" href="{{ url('/') }}">Ir para o início</a>
             </div>
         </section>
     </main>

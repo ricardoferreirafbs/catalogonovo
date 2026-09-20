@@ -1,5 +1,7 @@
 # FAQ de erros do Catálogo
 
+Página pública: `/ajuda/erros`
+
 Esta referência pode ser publicada na central de ajuda. O código identifica a categoria do erro e permanece igual em todas as ocorrências. O protocolo alfanumérico é exclusivo de cada ocorrência e permite que o suporte localize o registro correspondente nos logs da aplicação.
 
 ## CAT-401-AUTENTICACAO — Acesso não autenticado

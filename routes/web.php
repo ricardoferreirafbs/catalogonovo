@@ -12,11 +12,14 @@ use App\Http\Controllers\Auth\MfaChallengeController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ErrorHelpController;
 use App\Http\Controllers\Platform\AuditLogController;
 use App\Http\Controllers\Platform\DashboardController as PlatformDashboardController;
 use App\Http\Controllers\Platform\MfaController;
 use App\Http\Controllers\Platform\TenantController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/ajuda/erros', ErrorHelpController::class)->name('help.errors');
 
 Route::middleware('tenant')->group(function () {
     Route::get('/', [CatalogController::class, 'index'])->name('catalog.index');
