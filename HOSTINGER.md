@@ -55,6 +55,7 @@ APP_NAME="Catálogo SaaS"
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://catalogos.seudominio.com
+APP_DISPLAY_TIMEZONE=America/Sao_Paulo
 CATALOG_BASE_DOMAIN=catalogos.seudominio.com
 LOG_LEVEL=warning
 

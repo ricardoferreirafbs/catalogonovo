@@ -7,7 +7,7 @@
                 <p class="eyebrow">Proteção ativa</p>
                 <h2>Segundo fator configurado</h2>
                 <p class="security-lead">A conta exige um código temporário além da senha. {{ $user->isSuperAdmin() ? 'Essa proteção é obrigatória para superadministradores.' : 'Seu painel e os dados da empresa estão protegidos mesmo se a senha for descoberta.' }}</p>
-                <div class="security-status"><span>✓</span><div><strong>Autenticador confirmado</strong><small>Ativado em {{ $user->two_factor_confirmed_at->format('d/m/Y H:i') }}</small></div></div>
+                <div class="security-status"><span>✓</span><div><strong>Autenticador confirmado</strong><small>Ativado em {{ \App\Support\LocalDateTime::format($user->two_factor_confirmed_at) }} · {{ \App\Support\LocalDateTime::label() }}</small></div></div>
 
                 <div class="security-divider"></div>
                 <h3>Gerar novos códigos de recuperação</h3>

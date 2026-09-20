@@ -3,7 +3,7 @@
 @section('content')
     <section class="panel-card audit-panel">
         <div class="panel-heading audit-heading">
-            <div><p class="eyebrow">Eventos de segurança</p><h2>Operações registradas</h2><p>O conteúdo de senhas e formulários não é armazenado nesta trilha.</p></div>
+            <div><p class="eyebrow">Eventos de segurança</p><h2>Operações registradas</h2><p>O conteúdo de senhas e formulários não é armazenado nesta trilha. Datas em {{ \App\Support\LocalDateTime::label() }}.</p></div>
             <form method="get" class="audit-filters">
                 <input name="event" value="{{ $event }}" placeholder="Filtrar por evento ou rota">
                 <select name="outcome">
@@ -21,7 +21,7 @@
             </div>
             @forelse($logs as $log)
                 <div class="audit-row" role="row">
-                    <span><strong>{{ $log->created_at->format('d/m/Y') }}</strong><small>{{ $log->created_at->format('H:i:s') }}</small></span>
+                    <span><strong>{{ \App\Support\LocalDateTime::format($log->created_at, 'd/m/Y') }}</strong><small>{{ \App\Support\LocalDateTime::format($log->created_at, 'H:i:s') }}</small></span>
                     <span><strong>{{ $log->event }}</strong><small>{{ $log->method }} /{{ $log->path }}</small></span>
                     <span><strong>{{ $log->actor?->name ?? 'Não autenticado' }}</strong><small>{{ $log->actor?->email ?? '—' }}</small></span>
                     <span>{{ $log->tenant?->name ?? ($log->tenant_id ? '#'.$log->tenant_id : 'Plataforma') }}</span>

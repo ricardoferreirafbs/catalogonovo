@@ -109,6 +109,8 @@ php artisan optimize
 
 Antes de produção, use `APP_ENV=production`, `APP_DEBUG=false`, HTTPS, backup externo e uma senha exclusiva para o banco. Mantenha `SESSION_ENCRYPT=true`, `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true` e `SESSION_SAME_SITE=lax`.
 
+As datas são armazenadas em UTC e apresentadas no fuso configurado por `APP_DISPLAY_TIMEZONE`. Para a operação brasileira, mantenha `APP_DISPLAY_TIMEZONE=America/Sao_Paulo`; isso respeita automaticamente as regras oficiais do banco de fusos IANA sem alterar os registros gravados.
+
 Instalações antigas devem remover a conta conhecida de demonstração com `php artisan security:remove-demo-account --force`. O comando preserva a empresa, os produtos e o catálogo.
 
 Para a recuperação de senha funcionar, configure um servidor SMTP real no `.env`. A trilha de auditoria mantém 180 dias por padrão, ajustáveis por `AUDIT_RETENTION_DAYS`, e é limpa diariamente pelo agendador do Laravel.
