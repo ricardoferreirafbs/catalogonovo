@@ -188,6 +188,26 @@ class TenantRolesAndPermissionsTest extends TestCase
         $this->assertSame('owner', $owner->fresh()->role);
     }
 
+    public function test_faq_menu_is_available_to_every_tenant_role(): void
+    {
+        foreach (array_keys(User::TENANT_ROLE_LABELS) as $role) {
+            $tenant = Tenant::create([
+                'name' => 'Cliente '.User::TENANT_ROLE_LABELS[$role],
+                'slug' => 'cliente-'.$role,
+            ]);
+            $user = User::factory()->create([
+                'tenant_id' => $tenant->id,
+                'role' => $role,
+            ]);
+
+            $this->actingAs($user)
+                ->get(route('admin.dashboard'))
+                ->assertOk()
+                ->assertSee('FAQ e ajuda')
+                ->assertSee('href="'.route('help.errors').'"', escape: false);
+        }
+    }
+
     private function tenantAndUser(string $role): array
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
