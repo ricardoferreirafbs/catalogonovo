@@ -28,15 +28,25 @@ class PrivacyRequestStatusNotification extends Notification
             ['privacyRequest' => $this->privacyRequest->protocol],
         );
 
+        $isFinal = in_array($this->privacyRequest->status, ['completed', 'rejected'], true);
+        $messageLabel = match ($this->privacyRequest->status) {
+            'completed' => 'Resposta final',
+            'rejected' => 'Decisão e orientação',
+            'awaiting_information' => 'Informações necessárias',
+            default => 'Mensagem da equipe',
+        };
+
         $message = (new MailMessage)
-            ->subject('Atualização da solicitação '.$this->privacyRequest->protocol)
+            ->subject(($isFinal ? 'Resposta da solicitação ' : 'Atualização da solicitação ').$this->privacyRequest->protocol)
             ->greeting('Olá, '.$this->privacyRequest->requester_name.'!')
-            ->line('Sua solicitação de privacidade foi atualizada.')
+            ->line($isFinal
+                ? 'A análise da sua solicitação de privacidade foi concluída.'
+                : 'Sua solicitação de privacidade foi atualizada.')
             ->line('Protocolo: '.$this->privacyRequest->protocol)
             ->line('Situação: '.$this->privacyRequest->statusLabel());
 
         if ($this->privacyRequest->requester_message) {
-            $message->line('Mensagem da equipe: '.$this->privacyRequest->requester_message);
+            $message->line($messageLabel.': '.$this->privacyRequest->requester_message);
         }
 
         return $message

@@ -141,6 +141,7 @@ class PrivacyRequestTest extends TestCase
             ->withSession(['mfa_verified_user_id' => $superAdmin->id])
             ->patch(route('platform.privacy.update', $privacyRequest), [
                 'status' => 'completed',
+                'requester_message' => 'A solicitação foi atendida e a confirmação solicitada está disponível.',
                 'internal_notes' => 'Identidade validada e declaração enviada por canal seguro.',
             ])
             ->assertRedirect();
@@ -150,7 +151,38 @@ class PrivacyRequestTest extends TestCase
         $this->assertSame($superAdmin->id, $privacyRequest->reviewed_by_user_id);
         $this->assertNotNull($privacyRequest->completed_at);
         $this->assertTrue($privacyRequest->retention_until->between(now()->addDays(729), now()->addDays(731)));
-        Notification::assertSentTo($privacyRequest, PrivacyRequestStatusNotification::class);
+        Notification::assertSentTo(
+            $privacyRequest,
+            PrivacyRequestStatusNotification::class,
+            function (PrivacyRequestStatusNotification $notification) use ($privacyRequest): bool {
+                $mail = $notification->toMail($privacyRequest);
+                $content = implode(' ', array_map('strval', $mail->introLines));
+
+                return str_contains($mail->subject, 'Resposta da solicitação')
+                    && str_contains($content, 'Resposta final:')
+                    && str_contains($content, 'A solicitação foi atendida')
+                    && ! str_contains($content, 'Identidade validada');
+            }
+        );
+    }
+
+    public function test_request_cannot_be_completed_without_a_response_to_requester(): void
+    {
+        Notification::fake();
+        $superAdmin = $this->verifiedSuperAdmin();
+        $privacyRequest = $this->privacyRequest(['status' => 'in_review', 'email_verified_at' => now()]);
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->patch(route('platform.privacy.update', $privacyRequest), [
+                'status' => 'completed',
+                'internal_notes' => 'Tratativa interna encerrada.',
+            ])
+            ->assertSessionHasErrors('requester_message');
+
+        $this->assertSame('in_review', $privacyRequest->fresh()->status);
+        $this->assertNull($privacyRequest->fresh()->completed_at);
+        Notification::assertNothingSent();
     }
 
     public function test_status_change_notifies_requester_without_exposing_internal_notes(): void

@@ -60,12 +60,12 @@ class PrivacyRequestController extends Controller
                 'nullable', 'string', 'max:6000',
             ],
             'requester_message' => [
-                Rule::requiredIf(in_array($request->input('status'), ['awaiting_information', 'rejected'], true)),
+                Rule::requiredIf(in_array($request->input('status'), ['awaiting_information', 'completed', 'rejected'], true)),
                 'nullable', 'string', 'max:3000',
             ],
         ], [
             'internal_notes.required' => 'Registre a decisão e as providências antes de concluir ou não atender a solicitação.',
-            'requester_message.required' => 'Escreva uma mensagem clara para o solicitante nesta situação.',
+            'requester_message.required' => 'Registre a resposta destinada ao solicitante antes de pedir informações, concluir ou não atender.',
         ]);
 
         if (! $privacyRequest->email_verified_at && $data['status'] !== 'awaiting_verification') {

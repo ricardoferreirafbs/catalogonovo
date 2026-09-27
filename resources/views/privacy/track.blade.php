@@ -20,7 +20,7 @@
                 <div><dt>Tipo</dt><dd>{{ $privacyRequest->typeLabel() }}</dd></div>
                 <div><dt>Recebida em</dt><dd>{{ \App\Support\LocalDateTime::format($privacyRequest->created_at) }}</dd></div>
                 <div><dt>Última atualização</dt><dd>{{ \App\Support\LocalDateTime::format($privacyRequest->updated_at) }}</dd></div>
-                @if($privacyRequest->requester_message)<div class="privacy-detail-wide"><dt>Mensagem da equipe</dt><dd>{{ $privacyRequest->requester_message }}</dd></div>@endif
+                @if($privacyRequest->requester_message)<div class="privacy-detail-wide"><dt>{{ $privacyRequest->status === 'completed' ? 'Resposta final' : ($privacyRequest->status === 'rejected' ? 'Decisão e orientação' : 'Mensagem da equipe') }}</dt><dd>{{ $privacyRequest->requester_message }}</dd></div>@endif
             </dl>
             <div class="privacy-sensitive-alert"><strong>Link pessoal</strong><span>Não compartilhe este endereço. Ele permite consultar o andamento até expirar, sem revelar notas internas ou informações de outros usuários.</span></div>
         </section>
