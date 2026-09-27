@@ -8,6 +8,7 @@
 | Solicitação não confirmada por e-mail | 30 dias | criação | exclusão automática |
 | Solicitação confirmada/concluída | 730 dias, sujeito à validação jurídica | confirmação ou conclusão | exclusão automática após o prazo |
 | Auditoria | 180 dias por padrão | criação | exclusão automática |
+| Comunicação segura e respostas | 60 dias por padrão | publicação, encerramento ou última interação | exclusão automática do conteúdo e dos destinatários |
 
 ## Regras
 

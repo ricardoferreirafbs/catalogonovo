@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CommunicationController as AdminCommunicationController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MenuItemController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ErrorHelpController;
 use App\Http\Controllers\Platform\AuditLogController;
+use App\Http\Controllers\Platform\CommunicationController as PlatformCommunicationController;
 use App\Http\Controllers\Platform\DashboardController as PlatformDashboardController;
 use App\Http\Controllers\Platform\ErrorOccurrenceController;
 use App\Http\Controllers\Platform\MfaController;
@@ -58,6 +60,10 @@ Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user'])->gr
 
 Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'mfa.verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('/comunicacoes', [AdminCommunicationController::class, 'index'])->name('communications.index');
+    Route::get('/comunicacoes/{communication}', [AdminCommunicationController::class, 'show'])->name('communications.show');
+    Route::post('/comunicacoes/{communication}/respostas', [AdminCommunicationController::class, 'reply'])->middleware('throttle:secure-communications')->name('communications.reply');
+    Route::post('/comunicacoes/{communication}/ciencia', [AdminCommunicationController::class, 'acknowledge'])->middleware('throttle:secure-communications')->name('communications.acknowledge');
 
     Route::middleware('permission:products.view')->group(function () {
         Route::get('/produtos', [ProductController::class, 'index'])->name('products.index');
@@ -104,6 +110,12 @@ Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin'
 
 Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin', 'superadmin.mfa'])->group(function () {
     Route::get('/', PlatformDashboardController::class)->name('dashboard');
+    Route::get('/comunicacoes', [PlatformCommunicationController::class, 'index'])->name('communications.index');
+    Route::get('/comunicacoes/nova', [PlatformCommunicationController::class, 'create'])->name('communications.create');
+    Route::post('/comunicacoes', [PlatformCommunicationController::class, 'store'])->middleware('throttle:secure-communications')->name('communications.store');
+    Route::get('/comunicacoes/{communication}', [PlatformCommunicationController::class, 'show'])->name('communications.show');
+    Route::post('/comunicacoes/{communication}/respostas', [PlatformCommunicationController::class, 'reply'])->middleware('throttle:secure-communications')->name('communications.reply');
+    Route::patch('/comunicacoes/{communication}/encerrar', [PlatformCommunicationController::class, 'close'])->middleware('throttle:secure-communications')->name('communications.close');
     Route::get('/auditoria', AuditLogController::class)->name('audit.index');
     Route::get('/ocorrencias', [ErrorOccurrenceController::class, 'index'])->name('occurrences.index');
     Route::get('/ocorrencias/{occurrence}', [ErrorOccurrenceController::class, 'show'])->name('occurrences.show');

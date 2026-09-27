@@ -211,6 +211,25 @@ php artisan privacy:prune
 
 Incidentes confirmados envolvendo dados pessoais não podem ser rebaixados pelo painel e ficam retidos pelo prazo mínimo configurado. A decisão de comunicação à ANPD e aos titulares exige avaliação do caso concreto pelo responsável por privacidade.
 
+### Central de Comunicação Segura
+
+Configure a retenção das mensagens no `.env`:
+
+```dotenv
+COMMUNICATION_RETENTION_DAYS=60
+```
+
+O Superadmin pode publicar ou agendar mensagens no menu **Comunicações**, selecionar empresas e papéis, definir prioridade e exigir confirmação de ciência. Assuntos, mensagens iniciais e respostas são criptografados com `APP_KEY`. O e-mail contém somente um aviso genérico e o protocolo; o conteúdo exige autenticação no painel.
+
+O agendador executa `communications:publish` a cada minuto e `communications:prune` diariamente. Por isso, mantenha o cron `schedule:run` da Hostinger ativo. Para validar manualmente:
+
+```bash
+php artisan communications:publish
+php artisan communications:prune
+```
+
+A exclusão remove a comunicação, respostas e destinatários do banco ativo. Cópias criptografadas podem permanecer somente até o vencimento normal dos backups da hospedagem.
+
 ## Itens necessários antes da operação comercial
 
 - cobrança recorrente e webhooks idempotentes;

@@ -58,5 +58,14 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(10)->by($request->ip()),
             ];
         });
+
+        RateLimiter::for('secure-communications', function (Request $request) {
+            $userKey = (string) ($request->user()?->id ?? 'guest');
+
+            return [
+                Limit::perMinute(10)->by($userKey.'|'.$request->ip()),
+                Limit::perHour(100)->by($userKey),
+            ];
+        });
     }
 }

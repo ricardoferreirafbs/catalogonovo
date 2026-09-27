@@ -18,6 +18,7 @@
             </div>
             <nav class="sidebar-nav" aria-label="Menu do painel">
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span>⌂</span> Visão geral</a>
+                <a class="{{ request()->routeIs('admin.communications.*') ? 'active' : '' }}" href="{{ route('admin.communications.index') }}"><span>✉</span> Comunicações</a>
                 @if(auth()->user()->hasPermission('products.view'))<a class="{{ request()->routeIs('admin.products.*') ? 'active' : '' }}" href="{{ route('admin.products.index') }}"><span>□</span> Produtos</a>@endif
                 @if(auth()->user()->hasPermission('structure.manage'))<a class="{{ request()->routeIs('admin.categories.*') || request()->routeIs('admin.menus.*') ? 'active' : '' }}" href="{{ route('admin.categories.index') }}"><span>☷</span> Estrutura</a>@endif
                 @if(auth()->user()->hasPermission('content.manage'))<a class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}" href="{{ route('admin.content.edit') }}"><span>✎</span> Conteúdo</a>@endif
@@ -40,6 +41,7 @@
             </header>
 
             @if(session('success'))<div class="flash-message" role="status">✓ {{ session('success') }}</div>@endif
+            @if(session('warning'))<div class="warning-message" role="alert">! {{ session('warning') }}</div>@endif
             @if($errors->any())
                 <div class="error-message" role="alert"><strong>Confira os campos:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
             @endif

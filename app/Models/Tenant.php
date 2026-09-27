@@ -55,6 +55,11 @@ class Tenant extends Model
         return $this->hasMany(MenuItem::class);
     }
 
+    public function communications(): HasMany
+    {
+        return $this->hasMany(Communication::class);
+    }
+
     public function themeValue(string $key, string $fallback): string
     {
         return (string) data_get($this->theme, $key, $fallback);

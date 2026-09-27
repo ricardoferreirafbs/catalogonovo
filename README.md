@@ -121,4 +121,6 @@ Incidentes confirmados envolvendo dados pessoais possuem registro específico e 
 
 O inventário inicial, a matriz de retenção e o plano operacional de incidentes estão em `docs/privacidade`. Esses materiais são base técnica e devem ser validados pelo responsável jurídico/privacidade da organização.
 
+A Central de Comunicação Segura permite que o Superadmin publique ou agende avisos por empresa e papel, receba respostas, exija confirmação de ciência e acompanhe leitura. Assuntos e mensagens são criptografados no banco; os e-mails são genéricos e direcionam o usuário autenticado ao painel. O conteúdo expira após 60 dias por padrão. Configure `COMMUNICATION_RETENTION_DAYS` e mantenha o cron do Laravel ativo para publicação e exclusão automáticas.
+
 Consulte [HOSTINGER.md](HOSTINGER.md) para a publicação.

@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 Schedule::command('audit:prune')->dailyAt('03:30')->withoutOverlapping();
 Schedule::command('occurrences:prune')->dailyAt('03:45')->withoutOverlapping();
 Schedule::command('privacy:prune')->dailyAt('04:00')->withoutOverlapping();
+Schedule::command('communications:publish')->everyMinute()->withoutOverlapping();
+Schedule::command('communications:prune')->dailyAt('04:15')->withoutOverlapping();
