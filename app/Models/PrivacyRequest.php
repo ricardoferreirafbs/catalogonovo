@@ -24,6 +24,7 @@ class PrivacyRequest extends Model
         'awaiting_verification' => 'Aguardando confirmação',
         'verified' => 'Identidade confirmada',
         'in_review' => 'Em análise',
+        'awaiting_information' => 'Aguardando informações',
         'completed' => 'Concluída',
         'rejected' => 'Não atendida',
     ];
@@ -32,7 +33,7 @@ class PrivacyRequest extends Model
         'protocol', 'request_type', 'scope', 'tenant_id', 'requester_name',
         'requester_email', 'requester_email_hash', 'company_reference', 'details',
         'status', 'email_verified_at', 'reviewed_by_user_id', 'internal_notes',
-        'completed_at', 'retention_until',
+        'requester_message', 'completed_at', 'retention_until',
     ];
 
     protected function casts(): array
@@ -43,6 +44,7 @@ class PrivacyRequest extends Model
             'company_reference' => 'encrypted',
             'details' => 'encrypted',
             'internal_notes' => 'encrypted',
+            'requester_message' => 'encrypted',
             'email_verified_at' => 'datetime',
             'completed_at' => 'datetime',
             'retention_until' => 'datetime',

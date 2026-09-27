@@ -37,6 +37,7 @@
             </header>
 
             @if(session('success'))<div class="flash-message" role="status">✓ {{ session('success') }}</div>@endif
+            @if(session('warning'))<div class="warning-message" role="alert">! {{ session('warning') }}</div>@endif
             @if($errors->any())
                 <div class="error-message" role="alert"><strong>Confira os campos:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
             @endif

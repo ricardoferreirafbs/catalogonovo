@@ -39,7 +39,7 @@
             <aside class="panel-card privacy-request-card" id="solicitacao">
                 <p class="eyebrow">Canal do titular</p>
                 <h2>Enviar solicitação</h2>
-                <p>Após o envio, confirmaremos o endereço de e-mail antes de iniciar a análise.</p>
+                <p>Após o envio, confirmaremos o endereço de e-mail antes de iniciar a análise. Mudanças relevantes serão comunicadas com um novo link temporário de acompanhamento.</p>
                 @if($errors->any())<div class="error-message" role="alert">{{ $errors->first() }}</div>@endif
                 <form method="post" action="{{ route('privacy.requests.store') }}" class="stack-form">
                     @csrf

@@ -196,11 +196,12 @@ PRIVACY_CONTROLLER_DOCUMENT="CNPJ"
 PRIVACY_CONTACT_EMAIL=privacidade@seudominio.com
 PRIVACY_OFFICER_NAME="Nome do encarregado, quando aplicável"
 PRIVACY_VERIFICATION_HOURS=24
+PRIVACY_TRACKING_LINK_HOURS=168
 PRIVACY_UNVERIFIED_RETENTION_DAYS=30
 PRIVACY_REQUEST_RETENTION_DAYS=730
 ```
 
-O SMTP deve estar funcional: cada solicitação só avança após a confirmação do e-mail por link assinado. O menu **Privacidade** do Superadmin permite documentar a validação, a decisão e as providências. Os campos pessoais e as notas internas são criptografados com `APP_KEY`; preserve essa chave no plano seguro de recuperação.
+O SMTP deve estar funcional: cada solicitação só avança após a confirmação do e-mail por link assinado. Mudanças de situação enviam um novo link temporário de acompanhamento; o protocolo isolado não concede acesso. O menu **Privacidade** do Superadmin separa a mensagem destinada ao solicitante das notas internas. Ambos os campos e os demais dados pessoais são criptografados com `APP_KEY`; preserve essa chave no plano seguro de recuperação.
 
 O agendador executa `privacy:prune` diariamente. Para executar manualmente:
 

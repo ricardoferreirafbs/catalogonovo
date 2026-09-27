@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Platform;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\PrivacyRequest;
+use App\Notifications\PrivacyRequestStatusNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -58,8 +59,13 @@ class PrivacyRequestController extends Controller
                 Rule::requiredIf(in_array($request->input('status'), ['completed', 'rejected'], true)),
                 'nullable', 'string', 'max:6000',
             ],
+            'requester_message' => [
+                Rule::requiredIf(in_array($request->input('status'), ['awaiting_information', 'rejected'], true)),
+                'nullable', 'string', 'max:3000',
+            ],
         ], [
             'internal_notes.required' => 'Registre a decisão e as providências antes de concluir ou não atender a solicitação.',
+            'requester_message.required' => 'Escreva uma mensagem clara para o solicitante nesta situação.',
         ]);
 
         if (! $privacyRequest->email_verified_at && $data['status'] !== 'awaiting_verification') {
@@ -76,9 +82,12 @@ class PrivacyRequestController extends Controller
 
         $completed = in_array($data['status'], ['completed', 'rejected'], true);
 
+        $previousStatus = $privacyRequest->status;
+
         $privacyRequest->update([
             'status' => $data['status'],
             'internal_notes' => $data['internal_notes'] ?? null,
+            'requester_message' => $data['requester_message'] ?? null,
             'reviewed_by_user_id' => $request->user()->id,
             'completed_at' => $completed ? ($privacyRequest->completed_at ?? now()) : null,
             'retention_until' => $completed
@@ -86,7 +95,46 @@ class PrivacyRequestController extends Controller
                 : $privacyRequest->retention_until,
         ]);
 
-        return back()->with('success', 'Solicitação de privacidade atualizada.');
+        if ($previousStatus !== $privacyRequest->status) {
+            try {
+                $privacyRequest->notify(new PrivacyRequestStatusNotification($privacyRequest));
+            } catch (Throwable $exception) {
+                Log::error('Não foi possível notificar a atualização da solicitação de privacidade.', [
+                    'protocol' => $privacyRequest->protocol,
+                    'status' => $privacyRequest->status,
+                    'exception' => $exception::class,
+                ]);
+
+                return back()->with('warning', 'A tratativa foi salva, mas o e-mail não pôde ser enviado. Verifique o SMTP e use “Reenviar acompanhamento”.');
+            }
+        }
+
+        return back()->with('success', $previousStatus !== $privacyRequest->status
+            ? 'Solicitação atualizada e notificação enviada ao solicitante.'
+            : 'Solicitação de privacidade atualizada sem novo e-mail, pois a situação não mudou.');
+    }
+
+    public function notifyRequester(PrivacyRequest $privacyRequest): RedirectResponse
+    {
+        if (! $privacyRequest->email_verified_at) {
+            return back()->withErrors([
+                'notification' => 'O acompanhamento só pode ser enviado depois da confirmação do endereço de e-mail.',
+            ]);
+        }
+
+        try {
+            $privacyRequest->notify(new PrivacyRequestStatusNotification($privacyRequest));
+        } catch (Throwable $exception) {
+            Log::error('Não foi possível reenviar o acompanhamento da solicitação de privacidade.', [
+                'protocol' => $privacyRequest->protocol,
+                'status' => $privacyRequest->status,
+                'exception' => $exception::class,
+            ]);
+
+            return back()->with('warning', 'O e-mail não pôde ser enviado. Verifique as configurações do SMTP e tente novamente.');
+        }
+
+        return back()->with('success', 'Novo link temporário de acompanhamento enviado ao solicitante.');
     }
 
     private function auditAccess(Request $request, string $event, ?PrivacyRequest $privacyRequest = null): void

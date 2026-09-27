@@ -117,7 +117,7 @@ Para a recuperação de senha funcionar, configure um servidor SMTP real no `.en
 
 A Central de Ocorrências do Superadmin permite pesquisar os protocolos exibidos aos usuários sem acessar diretamente os arquivos de log. Ocorrências comuns têm retenção de 90 dias; investigações classificadas como segurança, 180 dias. Falhas HTTP 500 e 503 são abertas automaticamente como **Em investigação**. O endereço IP não é armazenado nessa central: somente um hash irreversível é usado para correlação.
 
-Incidentes confirmados envolvendo dados pessoais possuem registro específico e retenção mínima configurada em cinco anos. A página pública `/privacidade` oferece informações de transparência e um canal de direitos com protocolo, confirmação de e-mail e campos criptografados. O Superadmin trata os pedidos no menu **Privacidade**; configure a identidade e o contato reais do controlador pelas variáveis `PRIVACY_*` antes da publicação.
+Incidentes confirmados envolvendo dados pessoais possuem registro específico e retenção mínima configurada em cinco anos. A página pública `/privacidade` oferece informações de transparência e um canal de direitos com protocolo, confirmação de e-mail e campos criptografados. Mudanças de situação enviam notificações e links temporários assinados para acompanhamento, sem expor as notas internas. O Superadmin trata os pedidos no menu **Privacidade**; configure a identidade e o contato reais do controlador pelas variáveis `PRIVACY_*` antes da publicação.
 
 O inventário inicial, a matriz de retenção e o plano operacional de incidentes estão em `docs/privacidade`. Esses materiais são base técnica e devem ser validados pelo responsável jurídico/privacidade da organização.
 

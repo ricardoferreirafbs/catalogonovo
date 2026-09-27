@@ -26,6 +26,7 @@ Route::get('/ajuda/erros', ErrorHelpController::class)->name('help.errors');
 Route::get('/privacidade', [PrivacyRequestController::class, 'index'])->name('privacy.index');
 Route::post('/privacidade/solicitacao', [PrivacyRequestController::class, 'store'])->middleware('throttle:privacy-requests')->name('privacy.requests.store');
 Route::get('/privacidade/confirmar/{privacyRequest:protocol}', [PrivacyRequestController::class, 'verify'])->middleware('signed')->name('privacy.requests.verify');
+Route::get('/privacidade/acompanhar/{privacyRequest:protocol}', [PrivacyRequestController::class, 'track'])->middleware('signed')->name('privacy.requests.track');
 
 Route::middleware('tenant')->group(function () {
     Route::get('/', [CatalogController::class, 'index'])->name('catalog.index');
@@ -110,6 +111,7 @@ Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin'
     Route::get('/privacidade', [PlatformPrivacyRequestController::class, 'index'])->name('privacy.index');
     Route::get('/privacidade/{privacyRequest}', [PlatformPrivacyRequestController::class, 'show'])->name('privacy.show');
     Route::patch('/privacidade/{privacyRequest}', [PlatformPrivacyRequestController::class, 'update'])->name('privacy.update');
+    Route::post('/privacidade/{privacyRequest}/notificar', [PlatformPrivacyRequestController::class, 'notifyRequester'])->name('privacy.notify');
     Route::patch('/empresas/{tenant}/status', [TenantController::class, 'status'])->name('tenants.status');
     Route::resource('empresas', TenantController::class)->except('show')->parameters(['empresas' => 'tenant'])->names('tenants');
 });

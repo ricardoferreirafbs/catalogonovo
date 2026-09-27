@@ -7,6 +7,7 @@ use App\Notifications\VerifyPrivacyRequestNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -72,9 +73,22 @@ class PrivacyRequestController extends Controller
             ]);
         }
 
-        return redirect()->route('privacy.index')->with(
+        $trackingUrl = URL::temporarySignedRoute(
+            'privacy.requests.track',
+            now()->addHours(max(1, (int) config('privacy.tracking_link_hours', 168))),
+            ['privacyRequest' => $privacyRequest->protocol],
+        );
+
+        return redirect($trackingUrl)->with(
             'success',
             'E-mail confirmado. A solicitação '.$privacyRequest->protocol.' foi encaminhada para análise.'
         );
+    }
+
+    public function track(PrivacyRequest $privacyRequest): View
+    {
+        abort_unless($privacyRequest->email_verified_at, 404);
+
+        return view('privacy.track', compact('privacyRequest'));
     }
 }
