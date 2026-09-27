@@ -172,6 +172,19 @@ O cron `schedule:run` já descrito neste documento executa diariamente a retenç
 php artisan audit:prune
 ```
 
+O menu **Ocorrências** registra os protocolos apresentados aos usuários. Ocorrências operacionais permanecem por 90 dias; quando classificadas pelo Superadmin como investigação de segurança, permanecem por 180 dias. Falhas HTTP 500 e 503 entram automaticamente com situação **Em investigação**. Configure no `.env`:
+
+```dotenv
+ERROR_RETENTION_DAYS=90
+SECURITY_ERROR_RETENTION_DAYS=180
+```
+
+O mesmo cron remove diariamente os registros cujo prazo individual terminou. Para executar a limpeza manualmente:
+
+```bash
+php artisan occurrences:prune
+```
+
 ## Itens necessários antes da operação comercial
 
 - cobrança recorrente e webhooks idempotentes;

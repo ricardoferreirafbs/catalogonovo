@@ -9,6 +9,7 @@ use App\Http\Middleware\RequireSuperAdminMfa;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SecurityHeaders;
 use App\Support\ErrorReference;
+use App\Support\ErrorOccurrenceRecorder;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -63,6 +64,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 'tenant_id' => $user?->tenant_id,
                 'exception' => $exception::class,
             ]);
+
+            ErrorOccurrenceRecorder::record($request, $exception, $status, $reference, $protocol);
 
             return response()->view('errors.catalog', [
                 'status' => $status,

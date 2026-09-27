@@ -32,6 +32,13 @@ class ErrorReferenceTest extends TestCase
             ->assertDontSee('EnsurePermission');
         $response->assertHeader('X-Error-Code', 'CAT-403-ACESSO');
         $this->assertMatchesRegularExpression('/^[A-Z0-9]{10}$/', (string) $response->headers->get('X-Error-Protocol'));
+        $this->assertDatabaseHas('error_occurrences', [
+            'protocol' => $response->headers->get('X-Error-Protocol'),
+            'error_code' => 'CAT-403-ACESSO',
+            'tenant_id' => $tenant->id,
+            'actor_user_id' => $viewer->id,
+            'status' => 'new',
+        ]);
     }
 
     public function test_each_error_occurrence_receives_a_different_protocol(): void
@@ -58,6 +65,13 @@ class ErrorReferenceTest extends TestCase
             ->assertSee('CAT-500-INTERNO')
             ->assertDontSee('SEGREDO_INTERNO_NAO_EXIBIR')
             ->assertHeader('X-Error-Code', 'CAT-500-INTERNO');
+
+        $this->assertDatabaseHas('error_occurrences', [
+            'protocol' => $response->headers->get('X-Error-Protocol'),
+            'error_code' => 'CAT-500-INTERNO',
+            'http_status' => 500,
+            'status' => 'investigating',
+        ]);
     }
 
     public function test_json_errors_keep_the_api_response_format(): void

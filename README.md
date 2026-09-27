@@ -115,4 +115,6 @@ Instalações antigas devem remover a conta conhecida de demonstração com `php
 
 Para a recuperação de senha funcionar, configure um servidor SMTP real no `.env`. A trilha de auditoria mantém 180 dias por padrão, ajustáveis por `AUDIT_RETENTION_DAYS`, e é limpa diariamente pelo agendador do Laravel.
 
+A Central de Ocorrências do Superadmin permite pesquisar os protocolos exibidos aos usuários sem acessar diretamente os arquivos de log. Ocorrências comuns têm retenção de 90 dias; investigações classificadas como segurança, 180 dias. Falhas HTTP 500 e 503 são abertas automaticamente como **Em investigação**. O endereço IP não é armazenado nessa central: somente um hash irreversível é usado para correlação.
+
 Consulte [HOSTINGER.md](HOSTINGER.md) para a publicação.
