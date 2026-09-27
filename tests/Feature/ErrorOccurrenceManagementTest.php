@@ -72,6 +72,42 @@ class ErrorOccurrenceManagementTest extends TestCase
         $this->assertFalse($occurrence->fresh()->security_related);
     }
 
+    public function test_confirmed_personal_data_incident_is_retained_for_at_least_five_years(): void
+    {
+        $superAdmin = $this->verifiedSuperAdmin();
+        $occurrence = $this->occurrence();
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->patch(route('platform.occurrences.update', $occurrence), [
+                'status' => 'investigating',
+                'security_related' => '1',
+                'personal_data_incident' => '1',
+                'risk_assessment' => 'pending',
+                'affected_subjects_estimate' => 12,
+                'affected_data_categories' => 'Nome e e-mail.',
+                'containment_measures' => 'Sessões revogadas e acesso isolado.',
+                'internal_notes' => 'Incidente confirmado e encaminhado ao responsável por privacidade.',
+            ])
+            ->assertRedirect();
+
+        $occurrence->refresh();
+        $this->assertTrue($occurrence->personal_data_incident);
+        $this->assertTrue($occurrence->security_related);
+        $this->assertNotNull($occurrence->incident_confirmed_at);
+        $this->assertTrue($occurrence->retention_until->greaterThanOrEqualTo(now()->addYears(5)->subMinute()));
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->patch(route('platform.occurrences.update', $occurrence), [
+                'status' => 'resolved',
+                'internal_notes' => 'Tentativa indevida de rebaixamento.',
+            ])
+            ->assertSessionHasErrors('personal_data_incident');
+
+        $this->assertTrue($occurrence->fresh()->personal_data_incident);
+    }
+
     public function test_prune_command_uses_each_occurrence_retention_date(): void
     {
         $expiredSimple = $this->occurrence([

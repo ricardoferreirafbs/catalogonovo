@@ -22,7 +22,7 @@
                 <div><dt>Método e rota</dt><dd>{{ $occurrence->method }} {{ $occurrence->path }}<small>{{ $occurrence->route ?: 'Rota não identificada' }}</small></dd></div>
                 <div><dt>Classe técnica</dt><dd><code>{{ $occurrence->exception_class ?: 'Não identificada' }}</code></dd></div>
                 <div><dt>Correlação de origem</dt><dd><code>{{ $occurrence->ip_hash ? substr($occurrence->ip_hash, 0, 16).'…' : 'Não disponível' }}</code><small>Hash irreversível; o IP não é armazenado.</small></dd></div>
-                <div><dt>Retenção até</dt><dd>{{ \App\Support\LocalDateTime::format($occurrence->retention_until, 'd/m/Y H:i') }}<small>{{ $occurrence->security_related ? 'Investigação de segurança · '.config('security.security_error_retention_days', 180).' dias' : 'Ocorrência operacional · '.config('security.error_retention_days', 90).' dias' }}</small></dd></div>
+                <div><dt>Retenção até</dt><dd>{{ \App\Support\LocalDateTime::format($occurrence->retention_until, 'd/m/Y H:i') }}<small>{{ $occurrence->personal_data_incident ? 'Incidente confirmado · mínimo de '.config('security.personal_data_incident_retention_years', 5).' anos' : ($occurrence->security_related ? 'Investigação de segurança · '.config('security.security_error_retention_days', 180).' dias' : 'Ocorrência operacional · '.config('security.error_retention_days', 90).' dias') }}</small></dd></div>
             </dl>
         </section>
 
@@ -43,10 +43,44 @@
                     <input type="checkbox" name="security_related" value="1" @checked(old('security_related', $occurrence->security_related))>
                     Classificar como investigação de segurança
                 </label>
+                <label class="check-label occurrence-incident-check">
+                    <input type="checkbox" name="personal_data_incident" value="1" @checked(old('personal_data_incident', $occurrence->personal_data_incident)) @disabled($occurrence->personal_data_incident)>
+                    Confirmar incidente envolvendo dados pessoais
+                </label>
+                @if($occurrence->personal_data_incident)<input type="hidden" name="personal_data_incident" value="1">@endif
+
+                <div class="occurrence-incident-fields">
+                    <label>Avaliação de risco
+                        <select name="risk_assessment">
+                            <option value="">Selecione</option>
+                            <option value="pending" @selected(old('risk_assessment', $occurrence->risk_assessment) === 'pending')>Avaliação pendente</option>
+                            <option value="no_relevant_risk" @selected(old('risk_assessment', $occurrence->risk_assessment) === 'no_relevant_risk')>Sem risco ou dano relevante</option>
+                            <option value="relevant_risk" @selected(old('risk_assessment', $occurrence->risk_assessment) === 'relevant_risk')>Pode ocasionar risco ou dano relevante</option>
+                        </select>
+                    </label>
+                    <label>Estimativa de titulares afetados
+                        <input type="number" name="affected_subjects_estimate" min="0" value="{{ old('affected_subjects_estimate', $occurrence->affected_subjects_estimate) }}">
+                    </label>
+                    <label>Categorias de dados afetadas
+                        <textarea name="affected_data_categories" rows="4" maxlength="4000" placeholder="Ex.: nome, e-mail, dados de autenticação.">{{ old('affected_data_categories', $occurrence->affected_data_categories) }}</textarea>
+                    </label>
+                    <label>Medidas de contenção
+                        <textarea name="containment_measures" rows="4" maxlength="4000" placeholder="Registre bloqueios, correções e preservação de evidências.">{{ old('containment_measures', $occurrence->containment_measures) }}</textarea>
+                    </label>
+                    <div class="form-grid two-cols">
+                        <label>Comunicação à ANPD
+                            <input type="datetime-local" name="anpd_notified_at" value="{{ old('anpd_notified_at', $occurrence->anpd_notified_at?->format('Y-m-d\\TH:i')) }}">
+                        </label>
+                        <label>Comunicação aos titulares
+                            <input type="datetime-local" name="data_subjects_notified_at" value="{{ old('data_subjects_notified_at', $occurrence->data_subjects_notified_at?->format('Y-m-d\\TH:i')) }}">
+                        </label>
+                    </div>
+                    <p class="occurrence-legal-note">Confirme esta opção somente após análise. Incidentes com dados pessoais serão preservados por pelo menos {{ config('security.personal_data_incident_retention_years', 5) }} anos e não poderão ser rebaixados pelo painel.</p>
+                </div>
                 <label>Resumo interno
                     <textarea name="internal_notes" rows="8" maxlength="4000" placeholder="Registre evidências, impacto e providências sem incluir senhas, tokens ou códigos MFA.">{{ old('internal_notes', $occurrence->internal_notes) }}</textarea>
                 </label>
-                <p class="occurrence-retention-note">Ocorrências comuns permanecem por {{ config('security.error_retention_days', 90) }} dias. Ao classificar como segurança, a retenção passa a {{ config('security.security_error_retention_days', 180) }} dias a partir desta análise.</p>
+                <p class="occurrence-retention-note">Ocorrências comuns permanecem por {{ config('security.error_retention_days', 90) }} dias; triagens de segurança, {{ config('security.security_error_retention_days', 180) }} dias; incidentes confirmados com dados pessoais, no mínimo {{ config('security.personal_data_incident_retention_years', 5) }} anos.</p>
                 <button class="primary-button" type="submit">Salvar tratativa</button>
             </form>
 

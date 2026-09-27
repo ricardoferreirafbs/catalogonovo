@@ -177,6 +177,7 @@ O menu **Ocorrências** registra os protocolos apresentados aos usuários. Ocorr
 ```dotenv
 ERROR_RETENTION_DAYS=90
 SECURITY_ERROR_RETENTION_DAYS=180
+PERSONAL_DATA_INCIDENT_RETENTION_YEARS=5
 ```
 
 O mesmo cron remove diariamente os registros cujo prazo individual terminou. Para executar a limpeza manualmente:
@@ -184,6 +185,30 @@ O mesmo cron remove diariamente os registros cujo prazo individual terminou. Par
 ```bash
 php artisan occurrences:prune
 ```
+
+### Canal de privacidade
+
+Preencha os dados reais do agente responsável antes de publicar `/privacidade`:
+
+```dotenv
+PRIVACY_CONTROLLER_NAME="Razão social"
+PRIVACY_CONTROLLER_DOCUMENT="CNPJ"
+PRIVACY_CONTACT_EMAIL=privacidade@seudominio.com
+PRIVACY_OFFICER_NAME="Nome do encarregado, quando aplicável"
+PRIVACY_VERIFICATION_HOURS=24
+PRIVACY_UNVERIFIED_RETENTION_DAYS=30
+PRIVACY_REQUEST_RETENTION_DAYS=730
+```
+
+O SMTP deve estar funcional: cada solicitação só avança após a confirmação do e-mail por link assinado. O menu **Privacidade** do Superadmin permite documentar a validação, a decisão e as providências. Os campos pessoais e as notas internas são criptografados com `APP_KEY`; preserve essa chave no plano seguro de recuperação.
+
+O agendador executa `privacy:prune` diariamente. Para executar manualmente:
+
+```bash
+php artisan privacy:prune
+```
+
+Incidentes confirmados envolvendo dados pessoais não podem ser rebaixados pelo painel e ficam retidos pelo prazo mínimo configurado. A decisão de comunicação à ANPD e aos titulares exige avaliação do caso concreto pelo responsável por privacidade.
 
 ## Itens necessários antes da operação comercial
 

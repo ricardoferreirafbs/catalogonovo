@@ -20,6 +20,14 @@ class ErrorOccurrence extends Model
         'http_status',
         'status',
         'security_related',
+        'personal_data_incident',
+        'risk_assessment',
+        'affected_subjects_estimate',
+        'affected_data_categories',
+        'containment_measures',
+        'incident_confirmed_at',
+        'anpd_notified_at',
+        'data_subjects_notified_at',
         'tenant_id',
         'actor_user_id',
         'reviewed_by_user_id',
@@ -37,6 +45,10 @@ class ErrorOccurrence extends Model
     {
         return [
             'security_related' => 'boolean',
+            'personal_data_incident' => 'boolean',
+            'incident_confirmed_at' => 'datetime',
+            'anpd_notified_at' => 'datetime',
+            'data_subjects_notified_at' => 'datetime',
             'resolved_at' => 'datetime',
             'retention_until' => 'datetime',
         ];

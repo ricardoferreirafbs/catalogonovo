@@ -18,7 +18,7 @@
                 @auth
                     <a href="{{ auth()->user()->isSuperAdmin() ? route('platform.dashboard') : route('admin.dashboard') }}">Voltar ao painel</a>
                 @else
-                    <a href="{{ route('login') }}">Entrar no painel</a>
+                    <a href="{{ route('privacy.index') }}">Privacidade</a><a href="{{ route('login') }}">Entrar no painel</a>
                 @endauth
             </nav>
         </div>

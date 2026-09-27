@@ -66,9 +66,17 @@ class ErrorOccurrenceController extends Controller
     public function update(Request $request, ErrorOccurrence $occurrence): RedirectResponse
     {
         $request->merge(['security_related' => $request->boolean('security_related')]);
+        $request->merge(['personal_data_incident' => $request->boolean('personal_data_incident')]);
         $data = $request->validate([
             'status' => ['required', Rule::in(array_keys(ErrorOccurrence::STATUS_LABELS))],
             'security_related' => ['required', 'boolean'],
+            'personal_data_incident' => ['required', 'boolean'],
+            'risk_assessment' => [Rule::requiredIf($request->boolean('personal_data_incident')), 'nullable', Rule::in(['pending', 'no_relevant_risk', 'relevant_risk'])],
+            'affected_subjects_estimate' => ['nullable', 'integer', 'min:0', 'max:4294967295'],
+            'affected_data_categories' => [Rule::requiredIf($request->boolean('personal_data_incident')), 'nullable', 'string', 'max:4000'],
+            'containment_measures' => [Rule::requiredIf($request->boolean('personal_data_incident')), 'nullable', 'string', 'max:4000'],
+            'anpd_notified_at' => ['nullable', 'date'],
+            'data_subjects_notified_at' => ['nullable', 'date'],
             'internal_notes' => [
                 Rule::requiredIf($request->boolean('security_related')),
                 'nullable',
@@ -77,25 +85,51 @@ class ErrorOccurrenceController extends Controller
             ],
         ], [
             'internal_notes.required' => 'Registre um resumo da investigação ao classificar a ocorrência como segurança.',
+            'risk_assessment.required' => 'Informe a avaliação de risco do incidente com dados pessoais.',
+            'affected_data_categories.required' => 'Informe as categorias de dados pessoais potencialmente afetadas.',
+            'containment_measures.required' => 'Registre as medidas de contenção adotadas.',
         ]);
 
-        $securityRelated = (bool) $data['security_related'];
-        $retentionDays = max(30, (int) ($securityRelated
-            ? config('security.security_error_retention_days', 180)
-            : config('security.error_retention_days', 90)));
+        $personalDataIncident = (bool) $data['personal_data_incident'];
+        $securityRelated = (bool) $data['security_related'] || $personalDataIncident;
+
+        if ($occurrence->personal_data_incident && ! $personalDataIncident) {
+            return back()->withErrors([
+                'personal_data_incident' => 'Um incidente confirmado com dados pessoais não pode ser rebaixado. Corrija os dados da investigação ou consulte o responsável jurídico.',
+            ])->withInput();
+        }
+
+        $incidentConfirmedAt = $personalDataIncident
+            ? ($occurrence->incident_confirmed_at ?? now())
+            : null;
+        $retentionUntil = match (true) {
+            $personalDataIncident => $incidentConfirmedAt->copy()->addYears((int) config('security.personal_data_incident_retention_years', 5)),
+            $securityRelated => now()->addDays(max(30, (int) config('security.security_error_retention_days', 180))),
+            default => $occurrence->created_at->copy()->addDays(max(30, (int) config('security.error_retention_days', 90))),
+        };
 
         $occurrence->update([
             'status' => $data['status'],
             'security_related' => $securityRelated,
+            'personal_data_incident' => $personalDataIncident,
+            'risk_assessment' => $personalDataIncident ? $data['risk_assessment'] : null,
+            'affected_subjects_estimate' => $personalDataIncident ? ($data['affected_subjects_estimate'] ?? null) : null,
+            'affected_data_categories' => $personalDataIncident ? $data['affected_data_categories'] : null,
+            'containment_measures' => $personalDataIncident ? $data['containment_measures'] : null,
+            'incident_confirmed_at' => $incidentConfirmedAt,
+            'anpd_notified_at' => $personalDataIncident ? ($data['anpd_notified_at'] ?? null) : null,
+            'data_subjects_notified_at' => $personalDataIncident ? ($data['data_subjects_notified_at'] ?? null) : null,
             'internal_notes' => $data['internal_notes'] ?? null,
             'reviewed_by_user_id' => $request->user()->id,
             'resolved_at' => $data['status'] === 'resolved' ? ($occurrence->resolved_at ?? now()) : null,
-            'retention_until' => $securityRelated
-                ? now()->addDays($retentionDays)
-                : $occurrence->created_at->copy()->addDays($retentionDays),
+            'retention_until' => $retentionUntil,
         ]);
 
-        return back()->with('success', 'Ocorrência atualizada. Retenção definida para '.$retentionDays.' dias.');
+        $retentionMessage = $personalDataIncident
+            ? config('security.personal_data_incident_retention_years', 5).' anos'
+            : ($securityRelated ? config('security.security_error_retention_days', 180) : config('security.error_retention_days', 90)).' dias';
+
+        return back()->with('success', 'Ocorrência atualizada. Retenção definida para '.$retentionMessage.'.');
     }
 
     private function recordAccess(Request $request, string $event, ?ErrorOccurrence $occurrence = null): void

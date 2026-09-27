@@ -17,10 +17,15 @@ use App\Http\Controllers\Platform\AuditLogController;
 use App\Http\Controllers\Platform\DashboardController as PlatformDashboardController;
 use App\Http\Controllers\Platform\ErrorOccurrenceController;
 use App\Http\Controllers\Platform\MfaController;
+use App\Http\Controllers\Platform\PrivacyRequestController as PlatformPrivacyRequestController;
 use App\Http\Controllers\Platform\TenantController;
+use App\Http\Controllers\PrivacyRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ajuda/erros', ErrorHelpController::class)->name('help.errors');
+Route::get('/privacidade', [PrivacyRequestController::class, 'index'])->name('privacy.index');
+Route::post('/privacidade/solicitacao', [PrivacyRequestController::class, 'store'])->middleware('throttle:privacy-requests')->name('privacy.requests.store');
+Route::get('/privacidade/confirmar/{privacyRequest:protocol}', [PrivacyRequestController::class, 'verify'])->middleware('signed')->name('privacy.requests.verify');
 
 Route::middleware('tenant')->group(function () {
     Route::get('/', [CatalogController::class, 'index'])->name('catalog.index');
@@ -102,6 +107,9 @@ Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin'
     Route::get('/ocorrencias', [ErrorOccurrenceController::class, 'index'])->name('occurrences.index');
     Route::get('/ocorrencias/{occurrence}', [ErrorOccurrenceController::class, 'show'])->name('occurrences.show');
     Route::patch('/ocorrencias/{occurrence}', [ErrorOccurrenceController::class, 'update'])->name('occurrences.update');
+    Route::get('/privacidade', [PlatformPrivacyRequestController::class, 'index'])->name('privacy.index');
+    Route::get('/privacidade/{privacyRequest}', [PlatformPrivacyRequestController::class, 'show'])->name('privacy.show');
+    Route::patch('/privacidade/{privacyRequest}', [PlatformPrivacyRequestController::class, 'update'])->name('privacy.update');
     Route::patch('/empresas/{tenant}/status', [TenantController::class, 'status'])->name('tenants.status');
     Route::resource('empresas', TenantController::class)->except('show')->parameters(['empresas' => 'tenant'])->names('tenants');
 });

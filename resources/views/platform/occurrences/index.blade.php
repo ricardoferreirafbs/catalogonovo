@@ -4,7 +4,7 @@
     <section class="occurrence-metrics" aria-label="Resumo das ocorrências">
         <article><span>Novas</span><strong>{{ $metrics['new'] }}</strong><small>Aguardando triagem</small></article>
         <article><span>Em investigação</span><strong>{{ $metrics['investigating'] }}</strong><small>Análise em andamento</small></article>
-        <article><span>Segurança</span><strong>{{ $metrics['security'] }}</strong><small>Retenção de {{ config('security.security_error_retention_days', 180) }} dias</small></article>
+        <article><span>Segurança</span><strong>{{ $metrics['security'] }}</strong><small>Triagem por {{ config('security.security_error_retention_days', 180) }} dias</small></article>
         <article><span>Falhas da plataforma</span><strong>{{ $metrics['platform'] }}</strong><small>HTTP 500 e 503 ativos</small></article>
     </section>
 
@@ -46,11 +46,11 @@
             @forelse($occurrences as $occurrence)
                 <div class="occurrence-row" role="row">
                     <span><strong><code>{{ $occurrence->protocol }}</code></strong><small>{{ \App\Support\LocalDateTime::format($occurrence->created_at, 'd/m/Y H:i:s') }}</small></span>
-                    <span><strong>{{ $occurrence->error_code }}</strong><small>HTTP {{ $occurrence->http_status }}{{ $occurrence->security_related ? ' · Segurança' : '' }}</small></span>
+                    <span><strong>{{ $occurrence->error_code }}</strong><small>HTTP {{ $occurrence->http_status }}{{ $occurrence->personal_data_incident ? ' · Incidente LGPD' : ($occurrence->security_related ? ' · Segurança' : '') }}</small></span>
                     <span><strong>{{ $occurrence->tenant?->name ?? 'Plataforma/público' }}</strong><small>{{ $occurrence->actor?->email ?? 'Não autenticado' }}</small></span>
                     <span><strong>{{ $occurrence->method }}</strong><small>{{ $occurrence->path }}</small></span>
                     <span><span class="occurrence-status {{ $occurrence->status }}">{{ $occurrence->statusLabel() }}</span></span>
-                    <span><strong>{{ \App\Support\LocalDateTime::format($occurrence->retention_until, 'd/m/Y') }}</strong><small>{{ $occurrence->security_related ? config('security.security_error_retention_days', 180).' dias' : config('security.error_retention_days', 90).' dias' }}</small></span>
+                    <span><strong>{{ \App\Support\LocalDateTime::format($occurrence->retention_until, 'd/m/Y') }}</strong><small>{{ $occurrence->personal_data_incident ? config('security.personal_data_incident_retention_years', 5).' anos' : ($occurrence->security_related ? config('security.security_error_retention_days', 180).' dias' : config('security.error_retention_days', 90).' dias') }}</small></span>
                     <span><a class="table-link" href="{{ route('platform.occurrences.show', $occurrence) }}">Analisar</a></span>
                 </div>
             @empty

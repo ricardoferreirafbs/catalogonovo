@@ -25,6 +25,7 @@
                 @if(auth()->user()->hasPermission('users.view'))<a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><span>♙</span> Usuários</a>@endif
                 <a class="{{ request()->routeIs('admin.mfa.*') ? 'active' : '' }}" href="{{ route('admin.mfa.setup') }}"><span>◇</span> Segurança</a>
                 <a href="{{ route('help.errors') }}" target="_blank" rel="noopener"><span>?</span> FAQ e ajuda</a>
+                <a href="{{ route('privacy.index') }}" target="_blank" rel="noopener"><span>◉</span> Privacidade</a>
                 <a href="{{ auth()->user()->tenant->catalogUrl() }}" target="_blank" rel="noopener"><span>↗</span> Abrir catálogo</a>
             </nav>
             <form action="{{ route('logout') }}" method="post" class="sidebar-logout">
