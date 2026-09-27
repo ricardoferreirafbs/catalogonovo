@@ -230,6 +230,36 @@ php artisan communications:prune
 
 A exclusão remove a comunicação, respostas e destinatários do banco ativo. Cópias criptografadas podem permanecer somente até o vencimento normal dos backups da hospedagem.
 
+#### Ativação do Web Push
+
+O Web Push exige HTTPS, as extensões PHP `curl`, `mbstring` e `openssl` e um par VAPID permanente. Depois de instalar as dependências do Composer, gere o par uma única vez:
+
+```bash
+php artisan push:vapid-generate
+```
+
+Copie o resultado para o `.env` e defina um contato válido:
+
+```dotenv
+WEBPUSH_VAPID_SUBJECT=mailto:privacidade@seudominio.com
+WEBPUSH_VAPID_PUBLIC_KEY="chave-publica-gerada"
+WEBPUSH_VAPID_PRIVATE_KEY="chave-privada-gerada"
+WEBPUSH_TTL=300
+WEBPUSH_ALLOWED_ENDPOINT_HOSTS=fcm.googleapis.com,updates.push.services.mozilla.com,web.push.apple.com,.notify.windows.com
+```
+
+Não versione, envie por mensagem ou regenere a chave privada. A troca do par invalida as assinaturas existentes e exige nova autorização dos usuários. A lista de provedores autorizados reduz o risco de uso do servidor para requisições arbitrárias; só a altere depois de validar o endpoint emitido por um navegador legítimo. Depois da configuração, execute `php artisan optimize:clear` e `php artisan optimize`.
+
+Valide o ambiente sem revelar as chaves:
+
+```bash
+php artisan push:diagnose
+```
+
+Todos os itens devem retornar `OK`. Se a geração de chave EC falhar, confirme com o suporte da hospedagem a extensão OpenSSL com curva `prime256v1` e a localização do arquivo `openssl.cnf`/variável `OPENSSL_CONF`.
+
+Cada usuário ativa ou desativa o próprio dispositivo no menu **Comunicações**. A assinatura é vinculada ao usuário autenticado e criptografada com `APP_KEY`. A notificação de tela bloqueada é sempre genérica; o assunto e o conteúdo somente são carregados após login e MFA.
+
 ## Itens necessários antes da operação comercial
 
 - cobrança recorrente e webhooks idempotentes;

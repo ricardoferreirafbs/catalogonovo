@@ -91,6 +91,11 @@ class User extends Authenticatable
         return $this->hasMany(CommunicationRecipient::class);
     }
 
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->role === 'superadmin' && $this->tenant_id === null;

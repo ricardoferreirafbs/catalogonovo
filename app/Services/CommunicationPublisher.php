@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Communication;
-use App\Models\CommunicationRecipient;
+use App\Models\User;
 use App\Notifications\SecureCommunicationNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -11,6 +11,8 @@ use Throwable;
 
 class CommunicationPublisher
 {
+    public function __construct(private readonly WebPushSender $webPushSender) {}
+
     public function publish(Communication $communication): int
     {
         $recipientIds = DB::transaction(function () use ($communication): array {
@@ -60,6 +62,11 @@ class CommunicationPublisher
             }
         }
 
+        $this->webPushSender->send(
+            $communication->recipients->whereIn('user_id', $recipientIds)->pluck('user'),
+            $communication,
+        );
+
         return $failures;
     }
 
@@ -89,13 +96,22 @@ class CommunicationPublisher
             }
         }
 
+        $this->webPushSender->send(
+            $communication->recipients
+                ->filter(fn ($recipient) => $recipient->user
+                    && $recipient->user->tenant_id === $communication->tenant_id
+                    && in_array($recipient->user->role, $communication->recipient_roles, true))
+                ->pluck('user'),
+            $communication,
+        );
+
         return $failures;
     }
 
     public function notifyPlatform(Communication $communication): int
     {
         $failures = 0;
-        $admins = \App\Models\User::query()->whereNull('tenant_id')->where('role', 'superadmin')->get();
+        $admins = User::query()->whereNull('tenant_id')->where('role', 'superadmin')->get();
 
         foreach ($admins as $admin) {
             try {
@@ -109,6 +125,8 @@ class CommunicationPublisher
                 ]);
             }
         }
+
+        $this->webPushSender->send($admins, $communication, 'platform');
 
         return $failures;
     }

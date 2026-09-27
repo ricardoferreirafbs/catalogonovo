@@ -6,8 +6,8 @@ use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\TenantUserController;
+use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\MfaChallengeController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -22,6 +22,7 @@ use App\Http\Controllers\Platform\MfaController;
 use App\Http\Controllers\Platform\PrivacyRequestController as PlatformPrivacyRequestController;
 use App\Http\Controllers\Platform\TenantController;
 use App\Http\Controllers\PrivacyRequestController;
+use App\Http\Controllers\PushSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ajuda/erros', ErrorHelpController::class)->name('help.errors');
@@ -64,6 +65,8 @@ Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'mfa
     Route::get('/comunicacoes/{communication}', [AdminCommunicationController::class, 'show'])->name('communications.show');
     Route::post('/comunicacoes/{communication}/respostas', [AdminCommunicationController::class, 'reply'])->middleware('throttle:secure-communications')->name('communications.reply');
     Route::post('/comunicacoes/{communication}/ciencia', [AdminCommunicationController::class, 'acknowledge'])->middleware('throttle:secure-communications')->name('communications.acknowledge');
+    Route::post('/push/assinaturas', [PushSubscriptionController::class, 'store'])->middleware('throttle:secure-communications')->name('push.store');
+    Route::delete('/push/assinaturas', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:secure-communications')->name('push.destroy');
 
     Route::middleware('permission:products.view')->group(function () {
         Route::get('/produtos', [ProductController::class, 'index'])->name('products.index');
@@ -116,6 +119,8 @@ Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin'
     Route::get('/comunicacoes/{communication}', [PlatformCommunicationController::class, 'show'])->name('communications.show');
     Route::post('/comunicacoes/{communication}/respostas', [PlatformCommunicationController::class, 'reply'])->middleware('throttle:secure-communications')->name('communications.reply');
     Route::patch('/comunicacoes/{communication}/encerrar', [PlatformCommunicationController::class, 'close'])->middleware('throttle:secure-communications')->name('communications.close');
+    Route::post('/push/assinaturas', [PushSubscriptionController::class, 'store'])->middleware('throttle:secure-communications')->name('push.store');
+    Route::delete('/push/assinaturas', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:secure-communications')->name('push.destroy');
     Route::get('/auditoria', AuditLogController::class)->name('audit.index');
     Route::get('/ocorrencias', [ErrorOccurrenceController::class, 'index'])->name('occurrences.index');
     Route::get('/ocorrencias/{occurrence}', [ErrorOccurrenceController::class, 'show'])->name('occurrences.show');

@@ -3,10 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Communication;
-use App\Models\CommunicationRecipient;
+use App\Models\PushSubscription;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\SecureCommunicationNotification;
+use App\Services\WebPushSender;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -128,6 +129,83 @@ class SecureCommunicationTest extends TestCase
         $this->assertModelMissing($communication);
         $this->assertDatabaseCount('communication_messages', 0);
         $this->assertDatabaseCount('communication_recipients', 0);
+    }
+
+    public function test_push_subscription_is_encrypted_and_scoped_to_the_authenticated_user(): void
+    {
+        config([
+            'webpush.public_key' => 'public-test-key',
+            'webpush.private_key' => 'private-test-key',
+            'webpush.allowed_endpoint_hosts' => ['push.example.test'],
+        ]);
+        [$tenant, $owner, $viewer] = $this->tenantUsers();
+        $endpoint = 'https://push.example.test/send/device-secret-token';
+        $payload = [
+            'endpoint' => $endpoint,
+            'keys' => ['p256dh' => 'browser-public-key', 'auth' => 'browser-auth-secret'],
+            'contentEncoding' => 'aes128gcm',
+        ];
+
+        $this->actingAs($owner)
+            ->postJson(route('admin.push.store'), $payload)
+            ->assertCreated()
+            ->assertJson(['enabled' => true]);
+
+        $subscription = PushSubscription::firstOrFail();
+        $this->assertSame($owner->id, $subscription->user_id);
+        $this->assertSame($endpoint, $subscription->endpoint);
+        $raw = DB::table('push_subscriptions')->first();
+        $this->assertNotSame($endpoint, $raw->endpoint);
+        $this->assertNotSame('browser-public-key', $raw->public_key);
+        $this->assertNotSame('browser-auth-secret', $raw->auth_token);
+
+        $this->actingAs($viewer)
+            ->deleteJson(route('admin.push.destroy'), ['endpoint' => $endpoint])
+            ->assertOk();
+        $this->assertModelExists($subscription);
+
+        $this->actingAs($viewer)
+            ->postJson(route('admin.push.store'), $payload)
+            ->assertConflict();
+
+        $this->actingAs($owner)
+            ->deleteJson(route('admin.push.destroy'), ['endpoint' => $endpoint])
+            ->assertOk()
+            ->assertJson(['enabled' => false]);
+        $this->assertModelMissing($subscription);
+    }
+
+    public function test_push_endpoint_outside_the_allowlist_is_rejected(): void
+    {
+        config([
+            'webpush.public_key' => 'public-test-key',
+            'webpush.private_key' => 'private-test-key',
+            'webpush.allowed_endpoint_hosts' => ['fcm.googleapis.com'],
+        ]);
+        [, $owner] = $this->tenantUsers();
+
+        $this->actingAs($owner)->postJson(route('admin.push.store'), [
+            'endpoint' => 'https://internal.example.test/collect',
+            'keys' => ['p256dh' => 'browser-public-key', 'auth' => 'browser-auth-secret'],
+            'contentEncoding' => 'aes128gcm',
+        ])->assertUnprocessable()->assertJsonValidationErrors('endpoint');
+
+        $this->assertDatabaseCount('push_subscriptions', 0);
+    }
+
+    public function test_push_payload_is_generic_and_does_not_contain_message_content(): void
+    {
+        [$tenant, $owner] = $this->tenantUsers();
+        $superAdmin = $this->superAdmin();
+        $communication = $this->communication($tenant, $superAdmin, $owner);
+
+        $payload = app(WebPushSender::class)->payloadFor($communication);
+        $serialized = json_encode($payload, JSON_THROW_ON_ERROR);
+
+        $this->assertStringNotContainsString($communication->subject, $serialized);
+        $this->assertStringNotContainsString('Conteúdo protegido do teste', $serialized);
+        $this->assertSame('/painel/comunicacoes/'.$communication->protocol, $payload['url']);
+        $this->assertSame('Você possui uma nova mensagem segura. Entre na plataforma para consultar.', $payload['body']);
     }
 
     private function tenantUsers(): array
