@@ -107,6 +107,41 @@ class BackupRecoveryTest extends TestCase
         $this->assertModelExists($tenant);
     }
 
+    public function test_tenant_backup_contains_only_the_selected_company(): void
+    {
+        $tenantA = Tenant::create(['name' => 'Empresa Alfa', 'slug' => 'alfa']);
+        $tenantB = Tenant::create(['name' => 'Empresa Beta', 'slug' => 'beta']);
+        User::factory()->create(['tenant_id' => $tenantA->id, 'role' => 'owner']);
+        User::factory()->create(['tenant_id' => $tenantB->id, 'role' => 'owner']);
+        Storage::disk('uploads')->put("tenants/{$tenantA->id}/products/alfa.jpg", 'arquivo-alfa');
+        Storage::disk('uploads')->put("tenants/{$tenantB->id}/products/beta.jpg", 'arquivo-beta');
+
+        $manager = app(CatalogBackupManager::class);
+        $created = $manager->createTenant($tenantA);
+        $verified = $manager->verify($created['path']);
+
+        $this->assertSame('tenant', $verified['metadata']['scope']);
+        $this->assertSame($tenantA->id, $verified['metadata']['tenant_id']);
+        $this->assertSame(2, $verified['footer']['rows']);
+        $this->assertSame(1, $verified['footer']['files']);
+        $this->assertStringContainsString("backups/tenants/{$tenantA->id}/", $created['path']);
+        $this->assertCount(1, $manager->tenantFiles($tenantA));
+        $this->assertCount(0, $manager->tenantFiles($tenantB));
+    }
+
+    public function test_general_restore_rejects_a_tenant_backup(): void
+    {
+        $tenant = Tenant::create(['name' => 'Empresa Alfa', 'slug' => 'alfa']);
+        $manager = app(CatalogBackupManager::class);
+        $created = $manager->createTenant($tenant);
+
+        $this->emptyBackupTables();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('backup de empresa não pode ser usado');
+        $manager->restore($created['path']);
+    }
+
     private function emptyBackupTables(): void
     {
         Schema::disableForeignKeyConstraints();

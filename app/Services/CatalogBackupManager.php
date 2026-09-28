@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Tenant;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
@@ -29,6 +31,16 @@ class CatalogBackupManager
 
     public function create(): array
     {
+        return $this->createArchive();
+    }
+
+    public function createTenant(Tenant $tenant): array
+    {
+        return $this->createArchive($tenant);
+    }
+
+    private function createArchive(?Tenant $tenant = null): array
+    {
         $this->ensureRequirements();
         $archive = new EncryptedBackupArchive;
         $temporary = $this->temporaryFile();
@@ -42,6 +54,9 @@ class CatalogBackupManager
             $writer->add([
                 'type' => 'metadata',
                 'format' => 1,
+                'scope' => $tenant ? 'tenant' : 'general',
+                'tenant_id' => $tenant?->getKey(),
+                'tenant_slug' => $tenant?->slug,
                 'created_at' => now()->utc()->toIso8601String(),
                 'database_driver' => DB::getDriverName(),
                 'tables' => self::TABLES,
@@ -49,22 +64,23 @@ class CatalogBackupManager
                 'app_key_fingerprint' => hash('sha256', (string) config('app.key')),
             ]);
 
-            DB::transaction(function () use ($writer, &$rows): void {
+            DB::transaction(function () use ($writer, $tenant, &$rows): void {
                 foreach (self::TABLES as $table) {
                     if (! Schema::hasTable($table)) {
                         throw new RuntimeException("A tabela obrigatória {$table} não existe.");
                     }
 
-                    DB::table($table)->orderBy('id')->chunkById(200, function ($records) use ($writer, $table, &$rows): void {
+                    $this->queryForTable($table, $tenant)->orderBy('id')->chunkById(200, function ($records) use ($writer, $table, &$rows): void {
                         foreach ($records as $record) {
                             $writer->add(['type' => 'row', 'table' => $table, 'data' => (array) $record]);
                             $rows++;
                         }
                     });
                 }
-            }, 3);
+            });
 
-            foreach (Storage::disk('uploads')->allFiles('tenants') as $path) {
+            $uploadPrefix = $tenant ? 'tenants/'.$tenant->getKey() : 'tenants';
+            foreach (Storage::disk('uploads')->allFiles($uploadPrefix) as $path) {
                 $this->assertSafeUploadPath($path);
                 $stream = Storage::disk('uploads')->readStream($path);
                 if ($stream === false) {
@@ -110,7 +126,7 @@ class CatalogBackupManager
             }
 
             $writer->close(['rows' => $rows, 'files' => $files, 'file_bytes' => $bytes]);
-            $filename = $this->directory().'/catalog-'.now()->utc()->format('Ymd-His').'-'.bin2hex(random_bytes(4)).'.catalog-backup';
+            $filename = $this->archiveDirectory($tenant).'/catalog-'.($tenant ? $tenant->slug.'-' : 'general-').now()->utc()->format('Ymd-His').'-'.bin2hex(random_bytes(4)).'.catalog-backup';
             $stream = fopen($temporary, 'rb');
 
             if ($stream === false || ! Storage::disk($this->disk())->writeStream($filename, $stream)) {
@@ -166,6 +182,10 @@ class CatalogBackupManager
         $temporary = $this->copyToTemporary($path);
         $archive = new EncryptedBackupArchive;
         $verified = $this->verifyLocal($archive, $temporary);
+        if (($verified['metadata']['scope'] ?? 'general') !== 'general') {
+            unlink($temporary);
+            throw new RuntimeException('Um backup de empresa não pode ser usado na restauração geral.');
+        }
         $expectedFingerprint = hash('sha256', (string) config('app.key'));
 
         if (! hash_equals((string) ($verified['metadata']['app_key_fingerprint'] ?? ''), $expectedFingerprint)) {
@@ -305,7 +325,7 @@ class CatalogBackupManager
     public function prune(): int
     {
         $disk = Storage::disk($this->disk());
-        $files = collect($disk->files($this->directory()))
+        $files = collect($disk->allFiles($this->directory()))
             ->filter(fn (string $file) => str_ends_with($file, '.catalog-backup'))
             ->sortByDesc(fn (string $file) => $disk->lastModified($file))
             ->values();
@@ -313,9 +333,11 @@ class CatalogBackupManager
         $minimum = (int) config('backup.minimum_copies', 3);
         $deleted = 0;
 
-        foreach ($files->slice($minimum) as $file) {
-            if ($disk->lastModified($file) < $threshold && $disk->delete($file)) {
-                $deleted++;
+        foreach ($files->groupBy(fn (string $file) => dirname($file)) as $scopedFiles) {
+            foreach ($scopedFiles->values()->slice($minimum) as $file) {
+                if ($disk->lastModified($file) < $threshold && $disk->delete($file)) {
+                    $deleted++;
+                }
             }
         }
 
@@ -324,13 +346,93 @@ class CatalogBackupManager
 
     public function files(): array
     {
+        return $this->generalFiles();
+    }
+
+    public function generalFiles(): array
+    {
         $disk = Storage::disk($this->disk());
 
-        return collect($disk->files($this->directory()))
+        return collect(array_merge(
+            $disk->files($this->directory()),
+            $disk->files($this->directory().'/general'),
+        ))
             ->filter(fn (string $file) => str_ends_with($file, '.catalog-backup'))
             ->sortByDesc(fn (string $file) => $disk->lastModified($file))
             ->values()
             ->all();
+    }
+
+    public function tenantFiles(Tenant $tenant): array
+    {
+        $disk = Storage::disk($this->disk());
+
+        return collect($disk->files($this->archiveDirectory($tenant)))
+            ->filter(fn (string $file) => str_ends_with($file, '.catalog-backup'))
+            ->sortByDesc(fn (string $file) => $disk->lastModified($file))
+            ->values()
+            ->all();
+    }
+
+    public function resolveGeneralFile(string $filename): string
+    {
+        return $this->resolveFile($filename, [
+            $this->directory().'/general',
+            $this->directory(),
+        ]);
+    }
+
+    public function resolveTenantFile(Tenant $tenant, string $filename): string
+    {
+        return $this->resolveFile($filename, [$this->archiveDirectory($tenant)]);
+    }
+
+    public function diskName(): string
+    {
+        return $this->disk();
+    }
+
+    private function queryForTable(string $table, ?Tenant $tenant): Builder
+    {
+        $query = DB::table($table);
+
+        if (! $tenant) {
+            return $query;
+        }
+
+        $tenantId = $tenant->getKey();
+
+        return match ($table) {
+            'tenants' => $query->where('id', $tenantId),
+            'users', 'categories', 'menu_items', 'products', 'audit_logs', 'error_occurrences', 'privacy_requests', 'communications' => $query->where('tenant_id', $tenantId),
+            'product_media' => $query->whereIn('product_id', DB::table('products')->select('id')->where('tenant_id', $tenantId)),
+            'communication_messages', 'communication_recipients' => $query->whereIn('communication_id', DB::table('communications')->select('id')->where('tenant_id', $tenantId)),
+            'push_subscriptions' => $query->whereIn('user_id', DB::table('users')->select('id')->where('tenant_id', $tenantId)),
+            default => throw new RuntimeException("A tabela {$table} não possui uma regra de isolamento para backup de empresa."),
+        };
+    }
+
+    private function archiveDirectory(?Tenant $tenant = null): string
+    {
+        return $tenant
+            ? $this->directory().'/tenants/'.$tenant->getKey()
+            : $this->directory().'/general';
+    }
+
+    private function resolveFile(string $filename, array $directories): string
+    {
+        if ($filename === '' || basename($filename) !== $filename || ! preg_match('/\A[A-Za-z0-9._-]+\.catalog-backup\z/', $filename)) {
+            throw new RuntimeException('Nome de arquivo de backup inválido.');
+        }
+
+        foreach ($directories as $directory) {
+            $path = trim($directory, '/').'/'.$filename;
+            if (Storage::disk($this->disk())->exists($path)) {
+                return $path;
+            }
+        }
+
+        throw new RuntimeException('Arquivo de backup não encontrado.');
     }
 
     private function verifyLocal(EncryptedBackupArchive $archive, string $temporary): array

@@ -67,5 +67,14 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(100)->by($userKey),
             ];
         });
+
+        RateLimiter::for('backup-operations', function (Request $request) {
+            $userKey = (string) ($request->user()?->id ?? 'guest');
+
+            return [
+                Limit::perHour(6)->by($userKey),
+                Limit::perHour(20)->by($request->ip()),
+            ];
+        });
     }
 }

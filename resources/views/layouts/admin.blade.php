@@ -29,6 +29,7 @@
                 @if(auth()->user()->hasPermission('content.manage'))<a class="{{ request()->routeIs('admin.content.*') ? 'active' : '' }}" href="{{ route('admin.content.edit') }}"><span>✎</span> Conteúdo</a>@endif
                 @if(auth()->user()->hasPermission('appearance.manage'))<a class="{{ request()->routeIs('admin.theme.*') ? 'active' : '' }}" href="{{ route('admin.theme.edit') }}"><span>◐</span> Aparência</a>@endif
                 @if(auth()->user()->hasPermission('users.view'))<a class="{{ request()->routeIs('admin.users.*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}"><span>♙</span> Usuários</a>@endif
+                @if(auth()->user()->hasPermission('backup.manage'))<a class="{{ request()->routeIs('admin.backups.*') ? 'active' : '' }}" href="{{ route('admin.backups.index') }}"><span>↺</span> Backup da empresa</a>@endif
                 <a class="{{ request()->routeIs('admin.mfa.*') ? 'active' : '' }}" href="{{ route('admin.mfa.setup') }}"><span>◇</span> Segurança</a>
                 <a href="{{ route('help.errors') }}" target="_blank" rel="noopener"><span>?</span> FAQ e ajuda</a>
                 <a href="{{ route('privacy.index') }}" target="_blank" rel="noopener"><span>◉</span> Privacidade</a>

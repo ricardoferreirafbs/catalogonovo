@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BackupController as AdminBackupController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CommunicationController as AdminCommunicationController;
 use App\Http\Controllers\Admin\ContentController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ErrorHelpController;
 use App\Http\Controllers\Platform\AuditLogController;
+use App\Http\Controllers\Platform\BackupController as PlatformBackupController;
 use App\Http\Controllers\Platform\CommunicationController as PlatformCommunicationController;
 use App\Http\Controllers\Platform\DashboardController as PlatformDashboardController;
 use App\Http\Controllers\Platform\ErrorOccurrenceController;
@@ -67,6 +69,13 @@ Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'mfa
     Route::post('/comunicacoes/{communication}/ciencia', [AdminCommunicationController::class, 'acknowledge'])->middleware('throttle:secure-communications')->name('communications.acknowledge');
     Route::post('/push/assinaturas', [PushSubscriptionController::class, 'store'])->middleware('throttle:secure-communications')->name('push.store');
     Route::delete('/push/assinaturas', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:secure-communications')->name('push.destroy');
+
+    Route::prefix('backups')->name('backups.')->middleware('permission:backup.manage')->group(function () {
+        Route::get('/', [AdminBackupController::class, 'index'])->name('index');
+        Route::post('/', [AdminBackupController::class, 'store'])->middleware('throttle:backup-operations')->name('store');
+        Route::post('/{backup}/verificar', [AdminBackupController::class, 'verify'])->middleware('throttle:backup-operations')->name('verify');
+        Route::post('/{backup}/baixar', [AdminBackupController::class, 'download'])->middleware('throttle:backup-operations')->name('download');
+    });
 
     Route::middleware('permission:products.view')->group(function () {
         Route::get('/produtos', [ProductController::class, 'index'])->name('products.index');
@@ -121,6 +130,12 @@ Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin'
     Route::patch('/comunicacoes/{communication}/encerrar', [PlatformCommunicationController::class, 'close'])->middleware('throttle:secure-communications')->name('communications.close');
     Route::post('/push/assinaturas', [PushSubscriptionController::class, 'store'])->middleware('throttle:secure-communications')->name('push.store');
     Route::delete('/push/assinaturas', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:secure-communications')->name('push.destroy');
+    Route::prefix('backups')->name('backups.')->group(function () {
+        Route::get('/', [PlatformBackupController::class, 'index'])->name('index');
+        Route::post('/', [PlatformBackupController::class, 'store'])->middleware('throttle:backup-operations')->name('store');
+        Route::post('/{backup}/verificar', [PlatformBackupController::class, 'verify'])->middleware('throttle:backup-operations')->name('verify');
+        Route::post('/{backup}/baixar', [PlatformBackupController::class, 'download'])->middleware('throttle:backup-operations')->name('download');
+    });
     Route::get('/auditoria', AuditLogController::class)->name('audit.index');
     Route::get('/ocorrencias', [ErrorOccurrenceController::class, 'index'])->name('occurrences.index');
     Route::get('/ocorrencias/{occurrence}', [ErrorOccurrenceController::class, 'show'])->name('occurrences.show');

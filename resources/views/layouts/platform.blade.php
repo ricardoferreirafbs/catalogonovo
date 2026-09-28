@@ -27,6 +27,7 @@
                 <a href="{{ route('platform.tenants.create') }}"><span>＋</span> Nova empresa</a>
                 <a class="{{ request()->routeIs('platform.communications.*') ? 'active' : '' }}" href="{{ route('platform.communications.index') }}"><span>✉</span> Comunicações</a>
                 <a class="{{ request()->routeIs('platform.audit.*') ? 'active' : '' }}" href="{{ route('platform.audit.index') }}"><span>◎</span> Auditoria</a>
+                <a class="{{ request()->routeIs('platform.backups.*') ? 'active' : '' }}" href="{{ route('platform.backups.index') }}"><span>↺</span> Backup e restauração</a>
                 <a class="{{ request()->routeIs('platform.occurrences.*') ? 'active' : '' }}" href="{{ route('platform.occurrences.index') }}"><span>!</span> Ocorrências</a>
                 <a class="{{ request()->routeIs('platform.privacy.*') ? 'active' : '' }}" href="{{ route('platform.privacy.index') }}"><span>◉</span> Privacidade</a>
                 <a class="{{ request()->routeIs('platform.mfa.*') ? 'active' : '' }}" href="{{ route('platform.mfa.setup') }}"><span>◇</span> Segurança</a>

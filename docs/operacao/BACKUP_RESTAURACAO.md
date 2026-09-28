@@ -51,7 +51,15 @@ php artisan backup:list
 php artisan backup:verify
 ```
 
-O último comando precisa informar **Integridade e autenticação confirmadas**. No disco `local`, os arquivos ficam em `storage/app/private/backups` e não são publicados pela web.
+O último comando precisa informar **Integridade e autenticação confirmadas**. No disco `local`, os novos backups gerais ficam em `storage/app/private/backups/general` e não são publicados por URL pública. Backups antigos mantidos diretamente em `backups` continuam reconhecidos.
+
+O Superadmin também pode criar, verificar e baixar essas cópias em **Plataforma → Backup e restauração**. A execução da restauração permanece exclusivamente na linha de comando para impedir sobrescrita acidental da produção.
+
+## Backup isolado de empresa
+
+O Proprietário encontra **Painel → Backup da empresa**. A cópia inclui apenas o registro da própria empresa e os usuários, catálogo, comunicações, ocorrências, solicitações e uploads vinculados a ela. Administradores, editores e visualizadores não possuem essa permissão.
+
+Os arquivos ficam separados em `backups/tenants/{id}`. A identificação da empresa é derivada da sessão autenticada no servidor; o cliente não informa nem controla o `tenant_id`. Antes do download, o pacote é novamente autenticado e o escopo interno precisa corresponder à empresa conectada. Backups de empresa não são aceitos pelo comando de restauração geral.
 
 Baixe uma cópia pelo gerenciador de arquivos/SFTP da hospedagem e armazene-a fora da Hostinger. Uma cópia no mesmo servidor não protege contra perda da conta, falha do provedor ou exclusão ampla.
 
@@ -79,12 +87,12 @@ A restauração foi deliberadamente limitada a uma instalação com banco funcio
 2. Instale exatamente o código correspondente ou mais recente.
 3. Configure uma cópia segura do `.env`, mantendo a `APP_KEY` original e a `BACKUP_ENCRYPTION_KEY`.
 4. Execute `php artisan migrate --force` para criar as tabelas vazias.
-5. Coloque o arquivo em `storage/app/private/backups`.
+5. Coloque o arquivo em `storage/app/private/backups/general`.
 6. Verifique e restaure:
 
 ```bash
-php artisan backup:verify backups/NOME_DO_ARQUIVO.catalog-backup
-php artisan backup:restore backups/NOME_DO_ARQUIVO.catalog-backup --confirm=RESTORE-INTO-EMPTY-DATABASE
+php artisan backup:verify backups/general/NOME_DO_ARQUIVO.catalog-backup
+php artisan backup:restore backups/general/NOME_DO_ARQUIVO.catalog-backup --confirm=RESTORE-INTO-EMPTY-DATABASE
 php artisan optimize:clear
 ```
 
@@ -95,7 +103,7 @@ Em um destino configurado como produção, o comando também exige `--force`. An
 
 ```bash
 php artisan down --retry=60
-php artisan backup:restore backups/NOME_DO_ARQUIVO.catalog-backup --confirm=RESTORE-INTO-EMPTY-DATABASE --force
+php artisan backup:restore backups/general/NOME_DO_ARQUIVO.catalog-backup --confirm=RESTORE-INTO-EMPTY-DATABASE --force
 php artisan optimize:clear
 php artisan up
 ```
