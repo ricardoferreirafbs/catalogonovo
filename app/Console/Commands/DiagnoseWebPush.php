@@ -52,6 +52,22 @@ class DiagnoseWebPush extends Command
             'as duas variáveis devem existir no .env'
         );
 
+        if ($publicConfigured && $privateConfigured) {
+            $publicKey = $this->decodeBase64Url((string) config('webpush.public_key'));
+            $privateKey = $this->decodeBase64Url((string) config('webpush.private_key'));
+            $validKeys = $publicKey !== false
+                && strlen($publicKey) === 65
+                && ord($publicKey[0]) === 4
+                && $privateKey !== false
+                && strlen($privateKey) === 32;
+
+            $failures += $this->check(
+                $validKeys,
+                'Formato das chaves VAPID',
+                $validKeys ? null : 'gere novamente se as chaves foram truncadas ou receberam espaços/quebras de linha'
+            );
+        }
+
         $https = str_starts_with(strtolower((string) config('app.url')), 'https://');
         $failures += $this->check($https, 'APP_URL utiliza HTTPS', (string) config('app.url'));
 
@@ -76,5 +92,13 @@ class DiagnoseWebPush extends Command
         $this->line("[{$status}] {$label}{$suffix}");
 
         return $passed ? 0 : 1;
+    }
+
+    private function decodeBase64Url(string $value): string|false
+    {
+        $value = trim($value);
+        $padding = str_repeat('=', (4 - strlen($value) % 4) % 4);
+
+        return base64_decode(strtr($value.$padding, '-_', '+/'), true);
     }
 }

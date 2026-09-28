@@ -73,7 +73,44 @@ if (pushManager) {
         const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
         const raw = window.atob(base64);
 
-        return Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
+        const key = Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
+
+        if (key.length !== 65 || key[0] !== 4) {
+            throw new Error('push-invalid-vapid-key');
+        }
+
+        return key;
+    };
+
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+        || window.navigator.standalone === true;
+
+    const errorMessage = (error) => {
+        const code = error instanceof Error ? error.message : '';
+        const name = error instanceof DOMException ? error.name : '';
+
+        if (code === 'push-invalid-vapid-key' || name === 'InvalidAccessError') {
+            return 'A chave pública Web Push da plataforma é inválida. Solicite a revisão da configuração VAPID.';
+        }
+        if (code === 'push-request-401' || code === 'push-request-419') {
+            return 'Sua sessão expirou. Entre novamente antes de ativar as notificações.';
+        }
+        if (code === 'push-request-422') {
+            return 'O provedor de notificações deste navegador não foi aceito pela plataforma.';
+        }
+        if (code === 'push-request-503') {
+            return 'As chaves Web Push ainda não estão completas no servidor.';
+        }
+        if (name === 'NotAllowedError') {
+            return 'A permissão foi bloqueada. Libere as notificações nas configurações do navegador.';
+        }
+        if (name === 'AbortError') {
+            return 'O serviço de notificações do navegador não respondeu. Verifique a conexão e tente novamente.';
+        }
+
+        return 'Não foi possível ativar o Web Push. Recarregue a página e tente novamente.';
     };
 
     const request = async (url, method, body) => {
@@ -97,8 +134,20 @@ if (pushManager) {
     };
 
     const initializePush = async () => {
+        setState('Verificando os recursos de notificação deste dispositivo…', false, true);
+
         if (!publicKey) {
             setState('O Web Push ainda não foi configurado pela plataforma.', false, true);
+            return;
+        }
+
+        if (!window.isSecureContext) {
+            setState('As notificações exigem acesso HTTPS seguro.', false, true);
+            return;
+        }
+
+        if (isIos && !isStandalone) {
+            setState('No iPhone ou iPad, adicione a plataforma à Tela de Início e abra pelo novo ícone para ativar.', false, true);
             return;
         }
 
@@ -107,7 +156,9 @@ if (pushManager) {
             return;
         }
 
-        registration = await navigator.serviceWorker.register('/push-sw.js', {scope: '/', updateViaCache: 'none'});
+        applicationServerKey(publicKey);
+        await navigator.serviceWorker.register('/push-sw.js', {scope: '/', updateViaCache: 'none'});
+        registration = await navigator.serviceWorker.ready;
         subscription = await registration.pushManager.getSubscription();
 
         if (subscription) {
@@ -151,8 +202,8 @@ if (pushManager) {
             }
             subscription = newSubscription;
             setState('Notificações ativas neste dispositivo.', true);
-        } catch (_error) {
-            setState('Não foi possível alterar o Web Push. Atualize a página e tente novamente.');
+        } catch (error) {
+            setState(errorMessage(error));
         } finally {
             if (!button.dataset.enabled || button.dataset.enabled === 'false') {
                 button.disabled = Notification.permission === 'denied';
@@ -160,5 +211,5 @@ if (pushManager) {
         }
     });
 
-    initializePush().catch(() => setState('Não foi possível inicializar o Web Push neste navegador.', false, true));
+    initializePush().catch((error) => setState(errorMessage(error), false, true));
 }

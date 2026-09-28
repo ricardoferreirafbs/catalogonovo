@@ -208,6 +208,20 @@ class SecureCommunicationTest extends TestCase
         $this->assertSame('Você possui uma nova mensagem segura. Entre na plataforma para consultar.', $payload['body']);
     }
 
+    public function test_push_button_waits_for_browser_check_and_panel_exposes_web_app_manifest(): void
+    {
+        config(['webpush.public_key' => 'configured-public-key']);
+        [, $owner] = $this->tenantUsers();
+
+        $this->actingAs($owner)
+            ->withSession(['mfa_verified_user_id' => $owner->id])
+            ->get(route('admin.communications.index'))
+            ->assertOk()
+            ->assertSee('manifest.webmanifest', false)
+            ->assertSee('data-push-status aria-live="polite"', false)
+            ->assertSee('data-push-toggle disabled', false);
+    }
+
     private function tenantUsers(): array
     {
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);

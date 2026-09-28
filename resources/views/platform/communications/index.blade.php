@@ -2,8 +2,8 @@
 
 @section('content')
     <section class="panel-card push-manager" data-push-manager data-public-key="{{ config('webpush.public_key') }}" data-store-url="{{ route('platform.push.store') }}" data-destroy-url="{{ route('platform.push.destroy') }}">
-        <div><p class="eyebrow">Avisos no dispositivo</p><h2>Notificações Web Push</h2><p data-push-status>{{ config('webpush.public_key') ? 'Ative para receber avisos genéricos quando um cliente responder.' : 'Configure as chaves VAPID para ativar este recurso.' }}</p></div>
-        <button class="secondary-button" type="button" data-push-toggle @disabled(! config('webpush.public_key'))>Verificando navegador…</button>
+        <div><p class="eyebrow">Avisos no dispositivo</p><h2>Notificações Web Push</h2><p data-push-status aria-live="polite">{{ config('webpush.public_key') ? 'Ative para receber avisos genéricos quando um cliente responder.' : 'Configure as chaves VAPID para ativar este recurso.' }}</p></div>
+        <button class="secondary-button" type="button" data-push-toggle disabled>Verificando navegador…</button>
     </section>
     <div class="communication-actions"><p>Mensagens protegidas, avisos programados e confirmações de leitura. O conteúdo expira após {{ config('communication.retention_days', 60) }} dias.</p><a class="primary-button" href="{{ route('platform.communications.create') }}">Nova comunicação</a></div>
     <section class="panel-card occurrence-panel">

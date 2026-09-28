@@ -256,7 +256,7 @@ Valide o ambiente sem revelar as chaves:
 php artisan push:diagnose
 ```
 
-Todos os itens devem retornar `OK`. Se a geração de chave EC falhar, confirme com o suporte da hospedagem a extensão OpenSSL com curva `prime256v1` e a localização do arquivo `openssl.cnf`/variável `OPENSSL_CONF`.
+Todos os itens devem retornar `OK`, inclusive **Formato das chaves VAPID**. Se a geração de chave EC falhar, confirme com o suporte da hospedagem a extensão OpenSSL com curva `prime256v1` e a localização do arquivo `openssl.cnf`/variável `OPENSSL_CONF`. Depois de alterar o `.env`, execute `php artisan optimize:clear` antes de repetir o diagnóstico.
 
 Cada usuário ativa ou desativa o próprio dispositivo no menu **Comunicações**. A assinatura é vinculada ao usuário autenticado e criptografada com `APP_KEY`. A notificação de tela bloqueada é sempre genérica; o assunto e o conteúdo somente são carregados após login e MFA.
 

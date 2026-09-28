@@ -2,8 +2,8 @@
 
 @section('content')
     <section class="panel-card push-manager" data-push-manager data-public-key="{{ config('webpush.public_key') }}" data-store-url="{{ route('admin.push.store') }}" data-destroy-url="{{ route('admin.push.destroy') }}">
-        <div><p class="eyebrow">Avisos no dispositivo</p><h2>Notificações Web Push</h2><p data-push-status>{{ config('webpush.public_key') ? 'Ative para receber avisos genéricos mesmo com o painel fechado.' : 'O Web Push ainda não foi configurado pela plataforma.' }}</p></div>
-        <button class="secondary-button" type="button" data-push-toggle @disabled(! config('webpush.public_key'))>Verificando navegador…</button>
+        <div><p class="eyebrow">Avisos no dispositivo</p><h2>Notificações Web Push</h2><p data-push-status aria-live="polite">{{ config('webpush.public_key') ? 'Ative para receber avisos genéricos mesmo com o painel fechado.' : 'O Web Push ainda não foi configurado pela plataforma.' }}</p></div>
+        <button class="secondary-button" type="button" data-push-toggle disabled>Verificando navegador…</button>
     </section>
     <section class="panel-card occurrence-panel">
         <div class="panel-heading"><div><p class="eyebrow">Caixa de entrada segura</p><h2>Comunicados e interações</h2><p>O conteúdo permanece criptografado e é excluído após o prazo informado.</p></div></div>
