@@ -125,4 +125,6 @@ A Central de Comunicação Segura permite que o Superadmin publique ou agende av
 
 O Web Push é opcional e usa VAPID. As assinaturas do navegador são criptografadas no banco e a notificação mostra somente um aviso genérico; assunto e conteúdo nunca compõem o payload. Gere as chaves uma única vez com `php artisan push:vapid-generate`, armazene-as somente no `.env` e não as substitua enquanto existirem dispositivos inscritos.
 
+O backup próprio usa AES-256-GCM e inclui banco funcional e imagens sem depender de comandos do sistema. A restauração só aceita uma instalação vazia, confere a `APP_KEY`, as migrations, a quantidade de registros e a integridade do pacote. Consulte `docs/operacao/BACKUP_RESTAURACAO.md`; uma cópia local só se torna estratégia de recuperação depois de ser armazenada externamente e restaurada em homologação.
+
 Consulte [HOSTINGER.md](HOSTINGER.md) para a publicação.

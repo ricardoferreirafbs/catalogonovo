@@ -260,13 +260,30 @@ Todos os itens devem retornar `OK`, inclusive **Formato das chaves VAPID**. Se a
 
 Cada usuário ativa ou desativa o próprio dispositivo no menu **Comunicações**. A assinatura é vinculada ao usuário autenticado e criptografada com `APP_KEY`. A notificação de tela bloqueada é sempre genérica; o assunto e o conteúdo somente são carregados após login e MFA.
 
+### Backup criptografado e restauração
+
+A aplicação possui backup próprio compatível com hospedagem compartilhada, sem `exec()` ou `mysqldump`. Ele inclui banco funcional e imagens dos clientes, usa uma chave exclusiva e recusa restauração sobre uma instalação que já possua dados.
+
+```bash
+php artisan backup:key-generate
+php artisan optimize:clear
+php artisan backup:diagnose
+php artisan backup:create
+php artisan backup:verify
+php artisan backup:list
+```
+
+Comece com `BACKUP_ENABLED=false`. Depois de baixar uma cópia externa e homologar sua restauração em ambiente separado, altere para `true`. O cron existente criará o backup no horário configurado e removerá cópias vencidas sem ultrapassar o mínimo de segurança.
+
+O arquivo local fica em `storage/app/private/backups`, fora da área pública. Ele ainda precisa ser copiado para um local independente da hospedagem. A guarda externa da `APP_KEY`, da `BACKUP_ENCRYPTION_KEY` e das chaves VAPID é obrigatória para recuperação completa. Consulte `docs/operacao/BACKUP_RESTAURACAO.md` antes de restaurar.
+
 ## Itens necessários antes da operação comercial
 
 - cobrança recorrente e webhooks idempotentes;
 - recuperação de senha e verificação de e-mail;
 - política de limites por plano;
 - logs de auditoria;
-- backup automático testado;
+- backup externo e restauração real homologados;
 - armazenamento S3 compatível e CDN para imagens;
 - testes de isolamento entre empresas;
 - LGPD: termos, privacidade, exclusão e exportação de dados.

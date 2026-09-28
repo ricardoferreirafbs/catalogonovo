@@ -13,3 +13,11 @@ Schedule::command('occurrences:prune')->dailyAt('03:45')->withoutOverlapping();
 Schedule::command('privacy:prune')->dailyAt('04:00')->withoutOverlapping();
 Schedule::command('communications:publish')->everyMinute()->withoutOverlapping();
 Schedule::command('communications:prune')->dailyAt('04:15')->withoutOverlapping();
+Schedule::command('backup:create')
+    ->dailyAt((string) config('backup.time', '02:30'))
+    ->when(fn (): bool => (bool) config('backup.enabled'))
+    ->withoutOverlapping(180);
+Schedule::command('backup:prune')
+    ->dailyAt('05:00')
+    ->when(fn (): bool => (bool) config('backup.enabled'))
+    ->withoutOverlapping();

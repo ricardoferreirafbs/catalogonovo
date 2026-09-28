@@ -12,7 +12,7 @@ Este documento é um registro técnico inicial e deve ser validado pelo respons�
 | Comunicações seguras | assunto, mensagens, respostas, empresa, destinatários, leitura e ciência | usuários dos clientes e administradores da plataforma | suporte, avisos operacionais, segurança, cobrança e manutenção | conforme o tema da comunicação e o contrato | Hostinger e SMTP | 60 dias por padrão; registros formais relacionados seguem sua própria retenção |
 | Web Push | endpoint do navegador, chave pública da assinatura, token de autenticação e hash do agente do navegador | usuários que ativaram o recurso | entregar aviso genérico de nova comunicação | controladora para segurança e operação do canal | serviço push escolhido pelo navegador | enquanto ativado; remoção ao desativar, expirar ou excluir o usuário |
 | Sessões e recuperação | sessão, IP, agente, token temporário e e-mail | usuários | autenticação e recuperação de acesso | controladora | Hostinger e SMTP | prazo técnico da sessão/token |
-| Backups | cópia dos dados acima | mesmos titulares | continuidade e recuperação | conforme o processo original | Hostinger/fornecedor de backup | definir janela, expiração e teste de restauração |
+| Backups | cópia criptografada do banco funcional e imagens dos clientes | mesmos titulares | continuidade e recuperação | conforme o processo original | Hostinger e repositório externo definido pela operação | 14 dias por padrão, mínimo de 3 cópias; validar contrato, cópia externa e restauração |
 
 ## Pendências de validação organizacional
 
