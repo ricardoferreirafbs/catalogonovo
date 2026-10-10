@@ -80,6 +80,32 @@ class BackupRecoveryTest extends TestCase
         $manager->verify($created['path']);
     }
 
+    public function test_scheduled_backup_records_an_authenticated_origin(): void
+    {
+        config(['backup.enabled' => true, 'backup.max_age_hours' => 30]);
+
+        $created = app(CatalogBackupManager::class)->create('scheduled');
+        $verified = app(CatalogBackupManager::class)->verify($created['path']);
+
+        $this->assertSame('scheduled', $created['source']);
+        $this->assertSame('scheduled', $verified['metadata']['source']);
+        $this->artisan('backup:diagnose')
+            ->expectsOutputToContain('Backup automático autenticado encontrado')
+            ->expectsOutputToContain('Backup automático dentro do limite de 30 horas')
+            ->assertSuccessful();
+    }
+
+    public function test_manual_backup_does_not_prove_that_the_cron_is_running(): void
+    {
+        config(['backup.enabled' => true]);
+
+        app(CatalogBackupManager::class)->create();
+
+        $this->artisan('backup:diagnose')
+            ->expectsOutputToContain('aguarde a próxima execução do cron')
+            ->assertFailed();
+    }
+
     public function test_backup_verification_rejects_corruption(): void
     {
         $manager = app(CatalogBackupManager::class);

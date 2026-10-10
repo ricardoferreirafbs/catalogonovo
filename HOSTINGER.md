@@ -264,6 +264,16 @@ Cada usuário ativa ou desativa o próprio dispositivo no menu **Comunicações*
 
 A aplicação possui backup próprio compatível com hospedagem compartilhada, sem `exec()` ou `mysqldump`. Ele inclui banco funcional e imagens dos clientes, usa uma chave exclusiva e recusa restauração sobre uma instalação que já possua dados.
 
+```dotenv
+BACKUP_ENABLED=false
+BACKUP_DISK=local
+BACKUP_DIRECTORY=backups
+BACKUP_RETENTION_DAYS=14
+BACKUP_MINIMUM_COPIES=3
+BACKUP_TIME=02:30
+BACKUP_MAX_AGE_HOURS=30
+```
+
 ```bash
 php artisan backup:key-generate
 php artisan optimize:clear
@@ -273,7 +283,9 @@ php artisan backup:verify
 php artisan backup:list
 ```
 
-Comece com `BACKUP_ENABLED=false`. Depois de baixar uma cópia externa e homologar sua restauração em ambiente separado, altere para `true`. O cron existente criará o backup no horário configurado e removerá cópias vencidas sem ultrapassar o mínimo de segurança.
+Comece com `BACKUP_ENABLED=false`. Depois de baixar uma cópia externa e homologar sua restauração em ambiente separado, altere para `true`. O cron existente criará o backup no horário configurado e removerá cópias vencidas sem ultrapassar o mínimo de segurança. `BACKUP_TIME` usa UTC.
+
+Depois da primeira execução automática, repita `php artisan backup:diagnose`. O diagnóstico precisa mostrar um backup autenticado com origem **agendador** e idade inferior a 30 horas; uma cópia manual não comprova o cron.
 
 O arquivo local fica em `storage/app/private/backups`, fora da área pública. Ele ainda precisa ser copiado para um local independente da hospedagem. A guarda externa da `APP_KEY`, da `BACKUP_ENCRYPTION_KEY` e das chaves VAPID é obrigatória para recuperação completa. Consulte `docs/operacao/BACKUP_RESTAURACAO.md` antes de restaurar.
 

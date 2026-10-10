@@ -8,4 +8,5 @@ return [
     'retention_days' => max(1, (int) env('BACKUP_RETENTION_DAYS', 14)),
     'minimum_copies' => max(1, (int) env('BACKUP_MINIMUM_COPIES', 3)),
     'time' => env('BACKUP_TIME', '02:30'),
+    'max_age_hours' => max(1, (int) env('BACKUP_MAX_AGE_HOURS', 30)),
 ];

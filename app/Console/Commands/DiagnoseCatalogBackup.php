@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\CatalogBackupManager;
 use App\Services\EncryptedBackupArchive;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
@@ -13,10 +14,11 @@ class DiagnoseCatalogBackup extends Command
 
     protected $description = 'Verifica os requisitos do backup criptografado sem exibir segredos';
 
-    public function handle(): int
+    public function handle(CatalogBackupManager $manager): int
     {
         $failures = 0;
-        $failures += $this->check((bool) config('backup.enabled'), 'Agendamento habilitado', 'defina BACKUP_ENABLED=true após homologar');
+        $enabled = (bool) config('backup.enabled');
+        $failures += $this->check($enabled, 'Agendamento habilitado', 'defina BACKUP_ENABLED=true após homologar');
         $failures += $this->check(extension_loaded('openssl'), 'Extensão PHP OpenSSL');
         $failures += $this->check(
             extension_loaded('openssl') && in_array('aes-256-gcm', openssl_get_cipher_methods(), true),
@@ -45,6 +47,10 @@ class DiagnoseCatalogBackup extends Command
 
         $failures += $this->check(Storage::disk('uploads')->exists('') || is_dir(public_path('uploads')), 'Pasta de uploads disponível');
 
+        if ($enabled) {
+            $failures += $this->checkScheduledBackup($manager);
+        }
+
         if ($failures > 0) {
             $this->newLine();
             $this->error("Diagnóstico concluído com {$failures} requisito(s) pendente(s).");
@@ -65,5 +71,43 @@ class DiagnoseCatalogBackup extends Command
         $this->line("[{$status}] {$label}{$suffix}");
 
         return $passed ? 0 : 1;
+    }
+
+    private function checkScheduledBackup(CatalogBackupManager $manager): int
+    {
+        $scheduled = null;
+
+        foreach ($manager->generalFiles() as $file) {
+            try {
+                $verified = $manager->verify($file);
+            } catch (Throwable) {
+                continue;
+            }
+
+            if (($verified['metadata']['source'] ?? null) === 'scheduled') {
+                $scheduled = $file;
+                break;
+            }
+        }
+
+        if (! $scheduled) {
+            return $this->check(false, 'Backup automático autenticado encontrado', 'aguarde a próxima execução do cron e repita o diagnóstico');
+        }
+
+        $this->check(true, 'Backup automático autenticado encontrado');
+
+        $disk = Storage::disk($manager->diskName());
+        $ageSeconds = max(0, time() - $disk->lastModified($scheduled));
+        $maxAgeHours = (int) config('backup.max_age_hours', 30);
+        $ageHours = round($ageSeconds / 3600, 1);
+        $recent = $ageSeconds <= $maxAgeHours * 3600;
+
+        $this->line('Último automático: '.basename($scheduled)." · {$ageHours} hora(s)");
+
+        return $this->check(
+            $recent,
+            "Backup automático dentro do limite de {$maxAgeHours} horas",
+            "última cópia automática possui {$ageHours} hora(s)"
+        );
     }
 }

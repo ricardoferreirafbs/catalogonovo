@@ -29,10 +29,13 @@ class RestoreCatalogBackup extends Command
             return self::FAILURE;
         }
 
+        $startedAt = microtime(true);
+
         try {
             $result = $manager->restore((string) $this->argument('file'));
             $this->info('Backup restaurado e validado com sucesso.');
             $this->line("Banco: {$result['rows']} registro(s) · Uploads: {$result['files']} arquivo(s)");
+            $this->line('Duração: '.number_format(microtime(true) - $startedAt, 2, ',', '.').' segundo(s)');
 
             return self::SUCCESS;
         } catch (Throwable $exception) {

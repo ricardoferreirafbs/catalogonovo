@@ -29,9 +29,13 @@ class CatalogBackupManager
         'push_subscriptions',
     ];
 
-    public function create(): array
+    public function create(string $source = 'manual'): array
     {
-        return $this->createArchive();
+        if (! in_array($source, ['manual', 'scheduled'], true)) {
+            throw new RuntimeException('Origem de backup inválida.');
+        }
+
+        return $this->createArchive(source: $source);
     }
 
     public function createTenant(Tenant $tenant): array
@@ -39,7 +43,7 @@ class CatalogBackupManager
         return $this->createArchive($tenant);
     }
 
-    private function createArchive(?Tenant $tenant = null): array
+    private function createArchive(?Tenant $tenant = null, string $source = 'manual'): array
     {
         $this->ensureRequirements();
         $archive = new EncryptedBackupArchive;
@@ -57,6 +61,7 @@ class CatalogBackupManager
                 'scope' => $tenant ? 'tenant' : 'general',
                 'tenant_id' => $tenant?->getKey(),
                 'tenant_slug' => $tenant?->slug,
+                'source' => $source,
                 'created_at' => now()->utc()->toIso8601String(),
                 'database_driver' => DB::getDriverName(),
                 'tables' => self::TABLES,
@@ -143,7 +148,7 @@ class CatalogBackupManager
                 throw $exception;
             }
 
-            return ['path' => $filename, 'rows' => $rows, 'files' => $files, 'bytes' => filesize($temporary) ?: 0];
+            return ['path' => $filename, 'rows' => $rows, 'files' => $files, 'bytes' => filesize($temporary) ?: 0, 'source' => $source];
         } finally {
             $writer?->abort();
             if (is_file($temporary)) {

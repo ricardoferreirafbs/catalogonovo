@@ -29,6 +29,11 @@ class VerifyCatalogBackup extends Command
             $this->info('Integridade e autenticação confirmadas.');
             $this->line('Arquivo: '.$file);
             $this->line('Criado em UTC: '.($metadata['created_at'] ?? 'não informado'));
+            $this->line('Origem: '.match ($metadata['source'] ?? null) {
+                'scheduled' => 'agendador',
+                'manual' => 'manual',
+                default => 'versão anterior sem identificação',
+            });
             $this->line('Banco: '.($footer['rows'] ?? 0).' registro(s) · Uploads: '.($footer['files'] ?? 0).' arquivo(s)');
 
             return self::SUCCESS;

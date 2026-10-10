@@ -32,6 +32,7 @@ BACKUP_DIRECTORY=backups
 BACKUP_RETENTION_DAYS=14
 BACKUP_MINIMUM_COPIES=3
 BACKUP_TIME=02:30
+BACKUP_MAX_AGE_HOURS=30
 ```
 
 Limpe o cache e valide os requisitos:
@@ -79,6 +80,81 @@ php artisan optimize
 
 O cron `schedule:run` criará uma cópia diária e executará a retenção. O sistema mantém ao menos `BACKUP_MINIMUM_COPIES`, mesmo que sejam mais antigas que o prazo.
 
+`BACKUP_TIME` utiliza UTC. Assim, `02:30` corresponde a `23:30` do dia anterior em Brasília quando o deslocamento é UTC-3. O limite de 30 horas concede margem operacional sem deixar uma falha diária passar despercebida.
+
+## Comprovação do cron na Hostinger
+
+No hPanel, configure uma tarefa cron a cada minuto. Substitua o caminho pelo caminho absoluto real da pasta que contém `artisan`:
+
+```cron
+* * * * * cd /home/USUARIO/domains/DOMINIO/public_html && /usr/bin/php artisan schedule:run >> /home/USUARIO/schedule.log 2>&1
+```
+
+Depois do primeiro backup no horário programado, execute:
+
+```bash
+php artisan schedule:list
+php artisan backup:diagnose
+php artisan backup:verify
+```
+
+O diagnóstico somente aprova o cron quando encontra um pacote com origem **agendador**, autenticada dentro do próprio backup, e com idade inferior a `BACKUP_MAX_AGE_HOURS`. Um backup criado manualmente não comprova o funcionamento do cron. Guarde a saída do diagnóstico e a data no registro de homologação.
+
+Depois da confirmação, o redirecionamento do cron para `schedule.log` pode ser trocado por `/dev/null`; mantenha logs ou alertas enquanto a operação ainda estiver em piloto.
+
+## Cópia externa obrigatória
+
+A cópia mantida na Hostinger não é considerada cópia externa. Até existir integração automática com um armazenamento independente, a rotina operacional obrigatória é:
+
+1. Após o backup diário, o responsável acessa **Plataforma → Backup e restauração** usando MFA.
+2. Confirma a integridade e baixa o backup geral mais recente.
+3. Armazena o arquivo em repositório independente da Hostinger, com acesso restrito e MFA.
+4. Mantém 14 dias e no mínimo 3 cópias externas, sem renomear ou editar os pacotes.
+5. Registra data, nome do arquivo, tamanho, destino e responsável.
+6. Uma vez por semana, abre uma cópia externa com `backup:verify` em ambiente isolado.
+7. Uma vez por trimestre, executa uma restauração completa em homologação vazia.
+
+A transferência deve ocorrer diariamente até duas horas depois do horário configurado. Se não houver responsável para a atividade diária, a Etapa 1 permanece aberta até a transferência externa ser automatizada.
+
+## Cofre externo de recuperação
+
+O cofre deve ser independente da hospedagem, possuir MFA, histórico de acesso e pelo menos dois responsáveis autorizados. Registre separadamente:
+
+- `APP_KEY`;
+- `BACKUP_ENCRYPTION_KEY`;
+- `WEBPUSH_VAPID_PUBLIC_KEY` e `WEBPUSH_VAPID_PRIVATE_KEY`;
+- instruções para localizar a cópia externa e o código-fonte da versão implantada.
+
+Faça uma conferência por dupla custódia: uma pessoa registra e outra confirma que os valores podem ser recuperados. Não teste as chaves exibindo-as em terminal, ticket ou captura de tela; valide-as restaurando uma cópia em ambiente isolado.
+
+## Objetivos de recuperação
+
+- **RPO objetivo: até 24 horas.** Em perda total da Hostinger, admite-se perder no máximo as alterações posteriores à última cópia externa diária.
+- **RTO objetivo: até 8 horas após a declaração do incidente.** Inclui preparar hospedagem, instalar a versão compatível, configurar segredos, restaurar e validar as jornadas críticas.
+
+O tempo exibido por `backup:restore` mede a restauração técnica. O RTO real começa na declaração do incidente e termina quando login, MFA, catálogos, imagens, comunicações, privacidade e Web Push estão novamente validados. Registre ambos os tempos.
+
+## Recuperação seletiva de uma empresa
+
+Backups de empresa são pacotes de portabilidade e evidência; eles nunca devem ser importados diretamente sobre a produção. Para recuperar uma empresa:
+
+1. suspenda alterações na empresa afetada;
+2. selecione e autentique o backup da própria empresa;
+3. abra uma ocorrência operacional com empresa, motivo, responsável e ponto de recuperação;
+4. prepare banco e uploads temporários isolados;
+5. extraia e valide os registros por engenharia, preservando os identificadores e vínculos;
+6. compare com a produção e obtenha aprovação do Proprietário;
+7. importe somente os dados aprovados em transação, mantendo uma cópia anterior;
+8. valide catálogo, usuários, permissões, imagens e auditoria antes de reativar alterações.
+
+Não existe restauração seletiva automática na versão atual. Qualquer importação direta sem ambiente temporário e aprovação é proibida.
+
+## Dados excluídos presentes em backups
+
+Uma exclusão no banco ativo não reescreve pacotes já criados. Durante o prazo de 14 dias, os dados podem permanecer criptografados apenas para continuidade, com acesso restrito e sem uso operacional. Eles desaparecem pela retenção normal; uma obrigação legal pode suspender a eliminação mediante registro formal.
+
+Após restaurar uma cópia anterior, o responsável deve reaplicar todas as exclusões, encerramentos de empresa e solicitações de titulares ocorridas depois da data do backup antes de liberar o ambiente. O registro externo de homologação deve listar essas pendências sem copiar conteúdo pessoal desnecessário.
+
 ## Restauração homologada
 
 A restauração foi deliberadamente limitada a uma instalação com banco funcional vazio e sem arquivos em `public/uploads/tenants`. Ela nunca sobrescreve uma produção existente.
@@ -121,3 +197,20 @@ php artisan up
 - perda máxima aceitável comparada ao backup diário para confirmar o RPO de até 24 horas.
 
 Até a restauração real ser concluída e registrada, existe apenas uma cópia, não um processo de recuperação homologado.
+
+## Registro de homologação
+
+| Evidência | Valor |
+|---|---|
+| Data e responsável | preencher na execução |
+| Arquivo e tamanho | preencher na execução |
+| Origem indicada pelo pacote | agendador |
+| Cópia externa e destino | preencher sem registrar credenciais |
+| Cofre e dupla custódia confirmados | sim/não |
+| Início da declaração do teste | preencher na execução |
+| Duração técnica informada pelo comando | preencher na execução |
+| Retorno completo ao serviço | preencher na execução |
+| RPO observado | preencher na execução |
+| RTO observado | preencher na execução |
+| Jornadas críticas aprovadas | login, MFA, empresas, produtos, imagens, comunicações, privacidade e Web Push |
+| Resultado | aprovado/reprovado |
