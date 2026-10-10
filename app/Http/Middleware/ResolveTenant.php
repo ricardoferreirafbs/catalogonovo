@@ -12,6 +12,18 @@ class ResolveTenant
     public function handle(Request $request, Closure $next): Response
     {
         $host = strtolower($request->getHost());
+        $platformHost = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
+
+        if ($request->is('/') && $platformHost !== '' && $host === $platformHost) {
+            $user = $request->user();
+
+            if (! $user) {
+                return redirect()->route('login');
+            }
+
+            return redirect()->route($user->isSuperAdmin() ? 'platform.dashboard' : 'admin.dashboard');
+        }
+
         $tenant = Tenant::query()
             ->where('status', 'active')
             ->where(function ($query) use ($host) {

@@ -13,6 +13,27 @@ class CatalogPlatformTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_platform_host_root_redirects_guests_to_login(): void
+    {
+        $this->get(rtrim((string) config('app.url'), '/').'/')
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_platform_host_root_redirects_authenticated_users_to_their_panel(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
+        $superAdmin = User::factory()->create(['tenant_id' => null, 'role' => 'superadmin']);
+
+        $this->actingAs($owner)
+            ->get(rtrim((string) config('app.url'), '/').'/')
+            ->assertRedirect(route('admin.dashboard'));
+
+        $this->actingAs($superAdmin)
+            ->get(rtrim((string) config('app.url'), '/').'/')
+            ->assertRedirect(route('platform.dashboard'));
+    }
+
     public function test_catalog_only_exposes_products_from_resolved_tenant(): void
     {
         $aurora = Tenant::create(['name' => 'Aurora', 'slug' => 'aurora', 'status' => 'active']);
@@ -20,7 +41,7 @@ class CatalogPlatformTest extends TestCase
         Product::create(['tenant_id' => $aurora->id, 'name' => 'Produto Aurora', 'slug' => 'produto-aurora', 'status' => 'published']);
         Product::create(['tenant_id' => $other->id, 'name' => 'Produto Sigiloso', 'slug' => 'produto-sigiloso', 'status' => 'published']);
 
-        $response = $this->withServerVariables(['HTTP_HOST' => 'aurora.catalogos.test'])->get('/');
+        $response = $this->get('http://aurora.catalogos.test/');
 
         $response->assertOk()->assertSee('Produto Aurora')->assertDontSee('Produto Sigiloso');
     }
@@ -138,7 +159,7 @@ class CatalogPlatformTest extends TestCase
             'content' => ['hero_title' => 'Título totalmente editável', 'experience_title' => 'Experiência personalizada'],
         ]);
 
-        $this->withServerVariables(['HTTP_HOST' => 'editorial.catalogos.test'])->get('/')
+        $this->get('http://editorial.catalogos.test/')
             ->assertOk()->assertSee('template-accesso')->assertSee('Título totalmente editável')->assertSee('Experiência personalizada');
     }
 
@@ -196,7 +217,7 @@ class CatalogPlatformTest extends TestCase
             ],
         ]);
 
-        $this->withServerVariables(['HTTP_HOST' => 'aurora.catalogos.test'])->get('/')
+        $this->get('http://aurora.catalogos.test/')
             ->assertOk()
             ->assertSee('template-mimo')
             ->assertSee('Presentes feitos para')
