@@ -6,7 +6,7 @@
             @if($user->two_factor_confirmed_at)
                 <p class="eyebrow">Proteção ativa</p>
                 <h2>Segundo fator configurado</h2>
-                <p class="security-lead">A conta exige um código temporário além da senha. {{ $user->isSuperAdmin() ? 'Essa proteção é obrigatória para superadministradores.' : 'Seu painel e os dados da empresa estão protegidos mesmo se a senha for descoberta.' }}</p>
+                <p class="security-lead">A conta exige um código temporário além da senha. {{ $user->requiresMfa() ? 'Essa proteção é obrigatória para o seu perfil.' : 'Seu painel e os dados da empresa estão protegidos mesmo se a senha for descoberta.' }}</p>
                 <div class="security-status"><span>✓</span><div><strong>Autenticador confirmado</strong><small>Ativado em {{ \App\Support\LocalDateTime::format($user->two_factor_confirmed_at) }} · {{ \App\Support\LocalDateTime::label() }}</small></div></div>
 
                 <div class="security-divider"></div>
@@ -19,7 +19,7 @@
                     <button class="secondary-button" type="submit">Gerar novos códigos</button>
                 </form>
 
-                @unless($user->isSuperAdmin())
+                @unless($user->requiresMfa())
                     <div class="security-divider"></div>
                     <h3>Desativar segundo fator</h3>
                     <p>A conta voltará a depender somente da senha. Confirme sua identidade para continuar.</p>
@@ -32,8 +32,11 @@
                     </form>
                 @endunless
             @else
-                <p class="eyebrow">{{ $user->isSuperAdmin() ? 'Configuração obrigatória' : 'Proteção recomendada' }}</p>
+                <p class="eyebrow">{{ $user->requiresMfa() ? 'Configuração obrigatória' : 'Proteção recomendada' }}</p>
                 <h2>{{ $user->isSuperAdmin() ? 'Proteja a administração SaaS' : 'Proteja sua conta e seu catálogo' }}</h2>
+                @if($user->requiresMfa())
+                    <p class="security-warning">Conclua esta configuração para liberar o acesso ao painel. O segundo fator não poderá ser desativado enquanto seu perfil permanecer privilegiado.</p>
+                @endif
                 <p class="security-lead">No Google Authenticator, Microsoft Authenticator ou aplicativo compatível, escolha adicionar uma chave de configuração.</p>
 
                 <div class="mfa-qr-panel">

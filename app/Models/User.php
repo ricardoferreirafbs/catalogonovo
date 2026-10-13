@@ -101,6 +101,14 @@ class User extends Authenticatable
         return $this->role === 'superadmin' && $this->tenant_id === null;
     }
 
+    public function requiresMfa(): bool
+    {
+        return $this->isSuperAdmin()
+            || (config('security.privileged_mfa_required', true)
+                && $this->tenant_id !== null
+                && in_array($this->role, ['owner', 'admin'], true));
+    }
+
     public function hasPermission(string $permission): bool
     {
         if ($this->isSuperAdmin()) {

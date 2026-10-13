@@ -100,7 +100,11 @@ class MfaController extends Controller
 
     public function destroy(Request $request, TotpService $totp)
     {
-        abort_if($request->user()->isSuperAdmin(), 403);
+        abort_if(
+            $request->user()->requiresMfa(),
+            403,
+            'A autenticação em dois fatores é obrigatória para este perfil.'
+        );
 
         $data = $request->validate([
             'password' => ['required', 'current_password'],

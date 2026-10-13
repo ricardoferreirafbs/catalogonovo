@@ -14,6 +14,10 @@ class RequireMfaVerified
 
         abort_unless($user, 401);
 
+        if ($user->requiresMfa() && ! $user->two_factor_confirmed_at) {
+            return redirect()->route($user->isSuperAdmin() ? 'platform.mfa.setup' : 'admin.mfa.setup');
+        }
+
         if ($user->two_factor_confirmed_at
             && (int) $request->session()->get('mfa_verified_user_id') !== $user->id) {
             return redirect()->guest(route('mfa.challenge'));

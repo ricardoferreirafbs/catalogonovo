@@ -71,6 +71,7 @@ SESSION_ENCRYPT=true
 SESSION_SECURE_COOKIE=true
 SESSION_HTTP_ONLY=true
 SESSION_SAME_SITE=lax
+PRIVILEGED_MFA_REQUIRED=true
 AUDIT_RETENTION_DAYS=180
 QUEUE_CONNECTION=database
 CACHE_STORE=database
@@ -91,6 +92,19 @@ MAIL_FROM_NAME="Catálogo SaaS"
 ```
 
 Confirme no hPanel os dados SMTP e a porta da conta contratada. A aplicação sempre responde de forma genérica ao pedido de recuperação, sem revelar se um endereço está cadastrado.
+
+### MFA obrigatório para perfis privilegiados
+
+Mantenha `PRIVILEGED_MFA_REQUIRED=true` em produção. A regra exige MFA dos papéis **Proprietário** e **Administrador**; Editor e Visualizador continuam com ativação opcional. Contas privilegiadas existentes que ainda não tenham MFA serão direcionadas para a configuração no próximo login ou acesso ao painel.
+
+Depois de alterar o `.env`, atualize o cache da aplicação:
+
+```bash
+php artisan optimize:clear
+php artisan optimize
+```
+
+Antes de habilitar a regra, avise os clientes para que tenham um aplicativo autenticador disponível. A ativação gera oito códigos de recuperação, exibidos uma única vez; eles devem ser guardados em cofre separado do dispositivo autenticador. Não desative a exigência como forma de recuperar uma conta: utilize o procedimento administrativo de recuperação aprovado quando ele estiver implantado.
 
 ## Primeiro deploy
 

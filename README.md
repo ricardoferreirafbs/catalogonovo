@@ -85,7 +85,7 @@ Depois de entrar em `/entrar`, essa conta é direcionada para `/plataforma`. Nes
 
 No primeiro acesso, o superadministrador precisa cadastrar a chave TOTP em um aplicativo autenticador e salvar os códigos de recuperação. Os segredos são criptografados com `APP_KEY`; por isso, essa chave deve permanecer protegida e incluída no plano seguro de recuperação da infraestrutura.
 
-Os usuários das empresas podem ativar voluntariamente o segundo fator em **Painel → Segurança**. A configuração oferece QR Code, chave manual e oito códigos de recuperação de uso único. Depois de ativado, o segundo fator é exigido em toda nova sessão e nas rotas administrativas; a desativação exige a senha atual e um código válido.
+O segundo fator é obrigatório para **Proprietários** e **Administradores** das empresas. No primeiro acesso após a ativação da regra, esses perfis são direcionados para **Painel → Segurança** e não acessam o restante do painel antes de concluir a configuração. O processo oferece QR Code, chave manual e oito códigos de recuperação de uso único. Editor e Visualizador podem ativar o recurso voluntariamente. Depois de ativado, o segundo fator é exigido em toda nova sessão; somente perfis sem obrigatoriedade podem desativá-lo, mediante senha atual e código válido.
 
 Cada empresa possui quatro papéis fixos: **Proprietário**, **Administrador**, **Editor** e **Visualizador**. Proprietários administram toda a equipe; administradores podem convidar e gerenciar editores e visualizadores; editores cuidam dos produtos, estrutura e conteúdo; visualizadores possuem acesso somente de leitura. Os convites são enviados por e-mail com link temporário para definição da senha e nenhuma senha é transmitida na mensagem.
 

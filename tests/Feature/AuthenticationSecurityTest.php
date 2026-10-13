@@ -124,6 +124,8 @@ class AuthenticationSecurityTest extends TestCase
 
     public function test_tenant_user_can_configure_mfa_with_qr_code(): void
     {
+        config()->set('security.privileged_mfa_required', true);
+
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
         $owner = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
         $totp = app(TotpService::class);
@@ -131,7 +133,8 @@ class AuthenticationSecurityTest extends TestCase
         $this->actingAs($owner)->get(route('admin.mfa.setup'))
             ->assertOk()
             ->assertSee('data:image/svg+xml;base64', false)
-            ->assertSee('Proteja sua conta e seu catálogo');
+            ->assertSee('Proteja sua conta e seu catálogo')
+            ->assertSee('Configuração obrigatória');
 
         $owner->refresh();
 
@@ -145,9 +148,54 @@ class AuthenticationSecurityTest extends TestCase
         $this->assertCount(8, $owner->two_factor_recovery_codes);
         $this->get(route('admin.mfa.setup'))
             ->assertOk()
-            ->assertSee('Desativar segundo fator')
+            ->assertDontSee('Desativar segundo fator')
             ->assertSee('Gerar novos códigos de recuperação');
         $this->get(route('admin.dashboard'))->assertOk();
+        $activationLog = AuditLog::query()
+            ->where('actor_user_id', $owner->id)
+            ->where('tenant_id', $tenant->id)
+            ->where('event', 'admin.mfa.confirm')
+            ->firstOrFail();
+        $this->assertSame('success', $activationLog->metadata['outcome']);
+    }
+
+    public function test_privileged_tenant_roles_must_configure_mfa_before_accessing_the_panel(): void
+    {
+        config()->set('security.privileged_mfa_required', true);
+
+        foreach (['owner', 'admin'] as $role) {
+            $tenant = Tenant::create(['name' => 'Cliente '.$role, 'slug' => 'cliente-'.$role]);
+            $user = User::factory()->create([
+                'tenant_id' => $tenant->id,
+                'role' => $role,
+                'email' => $role.'@example.com',
+                'password' => Hash::make('Senha-Segura2026!'),
+            ]);
+
+            $this->post(route('login.store'), [
+                'email' => $user->email,
+                'password' => 'Senha-Segura2026!',
+            ])->assertRedirect(route('admin.mfa.setup'));
+
+            $this->get(route('admin.dashboard'))
+                ->assertRedirect(route('admin.mfa.setup'));
+
+            $this->post(route('logout'));
+        }
+    }
+
+    public function test_editor_and_viewer_are_not_forced_to_configure_mfa(): void
+    {
+        config()->set('security.privileged_mfa_required', true);
+
+        foreach (['editor', 'viewer'] as $role) {
+            $tenant = Tenant::create(['name' => 'Cliente '.$role, 'slug' => 'cliente-'.$role]);
+            $user = User::factory()->create(['tenant_id' => $tenant->id, 'role' => $role]);
+
+            $this->actingAs($user)
+                ->get(route('admin.dashboard'))
+                ->assertOk();
+        }
     }
 
     public function test_confirmed_tenant_user_must_complete_mfa_challenge_after_login(): void
@@ -184,27 +232,61 @@ class AuthenticationSecurityTest extends TestCase
         $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
         $totp = app(TotpService::class);
         $recoveryCode = 'CLIENTE-2026';
-        $owner = User::factory()->create([
+        $editor = User::factory()->create([
             'tenant_id' => $tenant->id,
-            'role' => 'owner',
+            'role' => 'editor',
             'password' => Hash::make('Senha-Segura2026!'),
             'two_factor_secret' => $totp->generateSecret(),
             'two_factor_recovery_codes' => [$totp->hashRecoveryCode($recoveryCode)],
             'two_factor_confirmed_at' => now(),
         ]);
 
-        $this->actingAs($owner)
-            ->withSession(['mfa_verified_user_id' => $owner->id])
+        $this->actingAs($editor)
+            ->withSession(['mfa_verified_user_id' => $editor->id])
             ->delete(route('admin.mfa.destroy'), [
                 'password' => 'Senha-Segura2026!',
                 'code' => $recoveryCode,
             ])->assertRedirect(route('admin.mfa.setup'));
 
-        $owner->refresh();
-        $this->assertNull($owner->two_factor_secret);
-        $this->assertNull($owner->two_factor_recovery_codes);
-        $this->assertNull($owner->two_factor_confirmed_at);
-        $this->assertNull($owner->two_factor_last_used_counter);
+        $editor->refresh();
+        $this->assertNull($editor->two_factor_secret);
+        $this->assertNull($editor->two_factor_recovery_codes);
+        $this->assertNull($editor->two_factor_confirmed_at);
+        $this->assertNull($editor->two_factor_last_used_counter);
+    }
+
+    public function test_privileged_tenant_roles_cannot_disable_mfa(): void
+    {
+        config()->set('security.privileged_mfa_required', true);
+        $totp = app(TotpService::class);
+
+        foreach (['owner', 'admin'] as $role) {
+            $tenant = Tenant::create(['name' => 'Cliente '.$role, 'slug' => 'protegido-'.$role]);
+            $secret = $totp->generateSecret();
+            $user = User::factory()->create([
+                'tenant_id' => $tenant->id,
+                'role' => $role,
+                'password' => Hash::make('Senha-Segura2026!'),
+                'two_factor_secret' => $secret,
+                'two_factor_recovery_codes' => [],
+                'two_factor_confirmed_at' => now(),
+            ]);
+
+            $this->actingAs($user)
+                ->withSession(['mfa_verified_user_id' => $user->id])
+                ->delete(route('admin.mfa.destroy'), [
+                    'password' => 'Senha-Segura2026!',
+                    'code' => $totp->code($secret),
+                ])->assertForbidden();
+
+            $this->assertNotNull($user->fresh()->two_factor_confirmed_at);
+            $rejectedLog = AuditLog::query()
+                ->where('actor_user_id', $user->id)
+                ->where('event', 'admin.mfa.destroy')
+                ->latest('id')
+                ->firstOrFail();
+            $this->assertSame('rejected', $rejectedLog->metadata['outcome']);
+        }
     }
 
     public function test_recovery_code_can_only_be_used_once(): void
