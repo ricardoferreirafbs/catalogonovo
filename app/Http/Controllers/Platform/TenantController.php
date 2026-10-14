@@ -11,6 +11,7 @@ use App\Services\OwnerMfaRecoveryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password as PasswordBroker;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -66,7 +67,16 @@ class TenantController extends Controller
             return $tenant;
         });
 
-        return redirect()->route('platform.tenants.edit', $tenant)->with('success', 'Empresa e administrador criados com sucesso.');
+        $owner = $tenant->owner()->firstOrFail();
+        $notificationSent = $this->sendOwnerVerification($owner);
+        $response = redirect()->route('platform.tenants.edit', $tenant)
+            ->with('success', 'Empresa e Proprietário criados. O e-mail precisa ser confirmado antes do primeiro acesso ao painel.');
+
+        if (! $notificationSent) {
+            $response->with('warning', 'A empresa foi criada, mas o link de confirmação não foi enviado. Confira o SMTP e use o reenvio pela conta do Proprietário.');
+        }
+
+        return $response;
     }
 
     public function edit(Tenant $tenant)
@@ -85,8 +95,11 @@ class TenantController extends Controller
     {
         $owner = $tenant->owner()->first();
         $data = $this->validated($request, $tenant, $owner);
+        $ownerEmailChanged = $owner
+            && strtolower($owner->email) !== strtolower($data['admin_email']);
+        $ownerNeedsVerification = ! $owner || $ownerEmailChanged;
 
-        DB::transaction(function () use ($data, $tenant, $owner) {
+        DB::transaction(function () use ($data, $tenant, $owner, $ownerEmailChanged) {
             $tenant->update($this->tenantData($data));
 
             $ownerData = [
@@ -100,6 +113,14 @@ class TenantController extends Controller
                 $ownerData['password'] = Hash::make($data['admin_password']);
             }
 
+            if ($ownerEmailChanged) {
+                $ownerData['email_verified_at'] = null;
+                $ownerData['remember_token'] = Str::random(60);
+                DB::table('sessions')->where('user_id', $owner->id)->delete();
+                PasswordBroker::deleteToken($owner);
+                $owner->pushSubscriptions()->delete();
+            }
+
             if ($owner) {
                 $owner->update($ownerData);
             } else {
@@ -108,7 +129,23 @@ class TenantController extends Controller
             }
         });
 
-        return back()->with('success', 'Empresa atualizada com sucesso.');
+        $currentOwner = $tenant->owner()->first();
+        $notificationSent = ! $ownerNeedsVerification || ($currentOwner && $this->sendOwnerVerification($currentOwner));
+        $successMessage = match (true) {
+            $ownerEmailChanged => 'Empresa atualizada. As sessões do Proprietário foram encerradas e o novo e-mail precisa ser confirmado.',
+            ! $owner => 'Empresa atualizada e conta proprietária criada. O e-mail precisa ser confirmado.',
+            default => 'Empresa atualizada com sucesso.',
+        };
+        $response = back()->with(
+            'success',
+            $successMessage
+        );
+
+        if (! $notificationSent) {
+            $response->with('warning', 'O novo e-mail foi salvo, mas o link de confirmação não foi enviado. Confira o SMTP.');
+        }
+
+        return $response;
     }
 
     public function status(Tenant $tenant)
@@ -261,5 +298,18 @@ class TenantController extends Controller
             'status' => $data['status'],
             'contact_phone' => $data['contact_phone'] ?? null,
         ];
+    }
+
+    private function sendOwnerVerification(User $owner): bool
+    {
+        try {
+            $owner->sendEmailVerificationNotification();
+
+            return true;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return false;
+        }
     }
 }

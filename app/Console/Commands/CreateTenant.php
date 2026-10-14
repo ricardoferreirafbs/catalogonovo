@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
+use Throwable;
 
 class CreateTenant extends Command
 {
@@ -56,7 +57,7 @@ class CreateTenant extends Command
         }
 
         try {
-            $tenant = DB::transaction(function () use ($slug, $email, $password, $domain) {
+            $created = DB::transaction(function () use ($slug, $email, $password, $domain) {
                 $tenant = Tenant::create([
                     'name' => $this->argument('name'),
                     'slug' => $slug,
@@ -64,7 +65,7 @@ class CreateTenant extends Command
                     'plan' => $this->option('plan'),
                     'theme' => Tenant::defaultTheme(),
                 ]);
-                User::create([
+                $owner = User::create([
                     'tenant_id' => $tenant->id,
                     'name' => 'Administrador',
                     'email' => $email,
@@ -73,12 +74,22 @@ class CreateTenant extends Command
                     'invitation_accepted_at' => now(),
                 ]);
 
-                return $tenant;
+                return [$tenant, $owner];
             });
         } catch (UniqueConstraintViolationException) {
             $this->error('Não foi possível criar a empresa porque o slug, domínio ou e-mail já está em uso.');
 
             return self::FAILURE;
+        }
+
+        [$tenant, $owner] = $created;
+
+        try {
+            $owner->sendEmailVerificationNotification();
+            $this->info('Link de confirmação enviado ao e-mail do Proprietário.');
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->warn('A empresa foi criada, mas o e-mail de confirmação não foi enviado. Confira a configuração SMTP.');
         }
 
         $this->info("Empresa {$tenant->name} criada com o identificador {$tenant->slug}.");

@@ -36,6 +36,10 @@ class AuthController extends Controller
         $request->session()->regenerate();
         $request->session()->forget('mfa_verified_user_id');
 
+        if ($user->requiresEmailVerification() && ! $user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
         if ($user->two_factor_confirmed_at) {
             return redirect()->route('mfa.challenge');
         }

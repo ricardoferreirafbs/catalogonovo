@@ -6,11 +6,13 @@ use App\Models\AuditLog;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyOwnerEmailNotification;
 use App\Services\TotpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class AuthenticationSecurityTest extends TestCase
@@ -56,6 +58,120 @@ class AuthenticationSecurityTest extends TestCase
             'password' => 'senha-fraca',
             'password_confirmation' => 'senha-fraca',
         ])->assertSessionHasErrors('password');
+    }
+
+    public function test_unverified_owner_must_confirm_email_before_mfa_and_panel_access(): void
+    {
+        config()->set('security.privileged_mfa_required', true);
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->unverified()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'email' => 'proprietario@example.com',
+            'password' => Hash::make('Senha-Segura2026!'),
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => $owner->email,
+            'password' => 'Senha-Segura2026!',
+        ])->assertRedirect(route('verification.notice'));
+
+        $this->get(route('admin.mfa.setup'))->assertRedirect(route('verification.notice'));
+        $this->get(route('admin.dashboard'))->assertRedirect(route('verification.notice'));
+        $this->get(route('verification.notice'))
+            ->assertOk()
+            ->assertSee($owner->email)
+            ->assertSee('Reenviar link de confirmação');
+    }
+
+    public function test_signed_owner_email_link_verifies_address_without_granting_direct_access(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->unverified()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+        ]);
+        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id' => $owner->id,
+            'hash' => sha1($owner->email),
+        ]);
+
+        $this->get($url)
+            ->assertRedirect(route('login'))
+            ->assertSessionHas('success');
+
+        $this->assertNotNull($owner->fresh()->email_verified_at);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_user_id' => $owner->id,
+            'tenant_id' => $tenant->id,
+            'event' => 'security.owner_email_verified',
+        ]);
+        $this->assertGuest();
+    }
+
+    public function test_tampered_owner_email_verification_link_is_rejected(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->unverified()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+        ]);
+        $url = URL::temporarySignedRoute('verification.verify', now()->addMinutes(60), [
+            'id' => $owner->id,
+            'hash' => sha1($owner->email),
+        ]);
+
+        $this->get($url.'&alterado=1')->assertForbidden();
+
+        $this->assertNull($owner->fresh()->email_verified_at);
+    }
+
+    public function test_expired_owner_email_verification_link_is_rejected(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->unverified()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+        ]);
+        $url = URL::temporarySignedRoute('verification.verify', now()->subMinute(), [
+            'id' => $owner->id,
+            'hash' => sha1($owner->email),
+        ]);
+
+        $this->get($url)->assertForbidden();
+
+        $this->assertNull($owner->fresh()->email_verified_at);
+    }
+
+    public function test_owner_can_request_a_new_email_verification_link(): void
+    {
+        Notification::fake();
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->unverified()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+        ]);
+
+        $this->actingAs($owner)
+            ->post(route('verification.send'))
+            ->assertRedirect()
+            ->assertSessionHas('success');
+
+        Notification::assertSentTo($owner, VerifyOwnerEmailNotification::class);
+    }
+
+    public function test_non_owner_tenant_roles_do_not_require_email_verification(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+
+        foreach (['admin', 'editor', 'viewer'] as $role) {
+            $user = User::factory()->unverified()->create([
+                'tenant_id' => $tenant->id,
+                'role' => $role,
+            ]);
+
+            $this->actingAs($user)->get(route('admin.dashboard'))->assertOk();
+        }
     }
 
     public function test_superadmin_must_configure_mfa_before_accessing_platform(): void

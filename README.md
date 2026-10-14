@@ -17,6 +17,7 @@ Plataforma multiempresa para publicar catálogos personalizados mantendo um úni
 - Contato por WhatsApp e produtos com preço sob consulta.
 - Comando seguro para provisionar novos clientes.
 - Recuperação de senha por link temporário, com resposta que não revela contas cadastradas.
+- Confirmação do e-mail do Proprietário por link temporário assinado antes do primeiro acesso.
 - Segundo fator TOTP obrigatório para superadministradores, cadastro por QR Code e códigos de recuperação de uso único.
 - Trilha de auditoria para operações de escrita, tentativas rejeitadas, origem e responsável.
 - Configurações de referência para Nginx e Supervisor em VPS Hostinger.

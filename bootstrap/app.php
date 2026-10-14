@@ -1,15 +1,16 @@
 <?php
 
 use App\Http\Middleware\AuditRequests;
-use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsurePermission;
+use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\EnsureTenantUser;
 use App\Http\Middleware\RequireMfaVerified;
 use App\Http\Middleware\RequireSuperAdminMfa;
+use App\Http\Middleware\RequireVerifiedEmail;
 use App\Http\Middleware\ResolveTenant;
 use App\Http\Middleware\SecurityHeaders;
-use App\Support\ErrorReference;
 use App\Support\ErrorOccurrenceRecorder;
+use App\Support\ErrorReference;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -33,11 +34,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'superadmin.mfa' => RequireSuperAdminMfa::class,
             'tenant.user' => EnsureTenantUser::class,
             'mfa.verified' => RequireMfaVerified::class,
+            'email.verified' => RequireVerifiedEmail::class,
             'permission' => EnsurePermission::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->respond(function (Response $response, \Throwable $exception, Request $request): Response {
+        $exceptions->respond(function (Response $response, Throwable $exception, Request $request): Response {
             $status = $response->getStatusCode();
 
             if ($request->expectsJson() || ! ErrorReference::supports($status)) {

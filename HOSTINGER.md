@@ -72,6 +72,7 @@ SESSION_SECURE_COOKIE=true
 SESSION_HTTP_ONLY=true
 SESSION_SAME_SITE=lax
 PRIVILEGED_MFA_REQUIRED=true
+OWNER_EMAIL_VERIFICATION_MINUTES=60
 AUDIT_RETENTION_DAYS=180
 QUEUE_CONNECTION=database
 CACHE_STORE=database
@@ -92,6 +93,14 @@ MAIL_FROM_NAME="Catálogo SaaS"
 ```
 
 Confirme no hPanel os dados SMTP e a porta da conta contratada. A aplicação sempre responde de forma genérica ao pedido de recuperação, sem revelar se um endereço está cadastrado.
+
+### Confirmação do e-mail do Proprietário
+
+Mantenha `OWNER_EMAIL_VERIFICATION_MINUTES=60` em produção. Toda nova conta de Proprietário recebe um link temporário e assinado. Antes da confirmação, a conta não acessa a configuração do MFA nem o painel. O link confirma o endereço, mas não autentica o usuário: senha e MFA continuam obrigatórios.
+
+Ao alterar o e-mail do Proprietário pelo painel da plataforma, o endereço volta ao estado não confirmado e as sessões, tokens de recuperação de senha e assinaturas Web Push desse usuário são revogados. A aplicação envia um novo link para o novo endereço.
+
+A migration desta versão considera confirmados os Proprietários que já existiam antes da implantação, evitando bloquear clientes em produção. Faça o deploy em modo de manutenção para que uma nova conta não seja criada durante essa migração.
 
 ### MFA obrigatório para perfis privilegiados
 

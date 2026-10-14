@@ -41,6 +41,15 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('email-verification', function (Request $request) {
+            $userKey = (string) ($request->user()?->id ?? 'guest');
+
+            return [
+                Limit::perHour(3)->by($userKey),
+                Limit::perHour(10)->by($request->ip()),
+            ];
+        });
+
         RateLimiter::for('mfa', function (Request $request) {
             $userKey = (string) ($request->user()?->id ?? 'guest');
 

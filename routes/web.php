@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\MenuItemController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\TenantUserController;
 use App\Http\Controllers\Admin\ThemeController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\MfaChallengeController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -28,6 +29,9 @@ use App\Http\Controllers\PushSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/ajuda/erros', ErrorHelpController::class)->name('help.errors');
+Route::get('/confirmar-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
 Route::get('/privacidade', [PrivacyRequestController::class, 'index'])->name('privacy.index');
 Route::post('/privacidade/solicitacao', [PrivacyRequestController::class, 'store'])->middleware('throttle:privacy-requests')->name('privacy.requests.store');
 Route::get('/privacidade/confirmar/{privacyRequest:protocol}', [PrivacyRequestController::class, 'verify'])->middleware('signed')->name('privacy.requests.verify');
@@ -50,18 +54,25 @@ Route::middleware('guest')->group(function () {
 Route::post('/sair', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/confirmar-email', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::post('/confirmar-email/reenviar', [EmailVerificationController::class, 'resend'])
+        ->middleware('throttle:email-verification')
+        ->name('verification.send');
+});
+
+Route::middleware(['auth', 'email.verified'])->group(function () {
     Route::get('/segundo-fator', [MfaChallengeController::class, 'create'])->name('mfa.challenge');
     Route::post('/segundo-fator', [MfaChallengeController::class, 'store'])->middleware('throttle:mfa')->name('mfa.verify');
 });
 
-Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user'])->group(function () {
+Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'email.verified'])->group(function () {
     Route::get('/seguranca/2fa', [MfaController::class, 'create'])->name('mfa.setup');
     Route::post('/seguranca/2fa', [MfaController::class, 'confirm'])->middleware('throttle:mfa')->name('mfa.confirm');
     Route::post('/seguranca/2fa/recuperacao', [MfaController::class, 'regenerateRecoveryCodes'])->middleware(['mfa.verified', 'throttle:mfa'])->name('mfa.recovery');
     Route::delete('/seguranca/2fa', [MfaController::class, 'destroy'])->middleware(['mfa.verified', 'throttle:mfa'])->name('mfa.destroy');
 });
 
-Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'mfa.verified'])->group(function () {
+Route::prefix('painel')->name('admin.')->middleware(['auth', 'tenant.user', 'email.verified', 'mfa.verified'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/comunicacoes', [AdminCommunicationController::class, 'index'])->name('communications.index');
     Route::get('/comunicacoes/{communication}', [AdminCommunicationController::class, 'show'])->name('communications.show');

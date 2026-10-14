@@ -6,6 +6,7 @@ use App\Models\AuditLog;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Notifications\OwnerMfaRecoveredNotification;
+use App\Notifications\VerifyOwnerEmailNotification;
 use App\Services\TotpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,7 @@ class PlatformAdministrationTest extends TestCase
 
     public function test_superadmin_can_create_a_tenant_and_its_owner(): void
     {
+        Notification::fake();
         $superAdmin = $this->verifiedSuperAdmin();
 
         $response = $this->actingAs($superAdmin)->withSession(['mfa_verified_user_id' => $superAdmin->id])->post(route('platform.tenants.store'), [
@@ -54,6 +56,68 @@ class PlatformAdministrationTest extends TestCase
             'email' => 'gestor@empresa.com.br',
             'role' => 'owner',
         ]);
+        $owner = $tenant->owner()->firstOrFail();
+        $this->assertNull($owner->email_verified_at);
+        Notification::assertSentTo($owner, VerifyOwnerEmailNotification::class);
+    }
+
+    public function test_changing_owner_email_revokes_sessions_and_requires_new_verification(): void
+    {
+        Notification::fake();
+        $totp = app(TotpService::class);
+        $superAdmin = $this->verifiedSuperAdmin();
+        $tenant = Tenant::create([
+            'name' => 'Cliente',
+            'slug' => 'cliente',
+            'plan' => 'professional',
+            'status' => 'active',
+        ]);
+        $owner = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'email' => 'anterior@example.com',
+            'two_factor_secret' => $totp->generateSecret(),
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
+        DB::table('sessions')->insert([
+            'id' => 'owner-email-session',
+            'user_id' => $owner->id,
+            'ip_address' => '127.0.0.1',
+            'user_agent' => 'Owner browser',
+            'payload' => 'payload',
+            'last_activity' => now()->timestamp,
+        ]);
+        $owner->pushSubscriptions()->create([
+            'endpoint_hash' => hash('sha256', 'https://push.example/email-change'),
+            'endpoint' => 'https://push.example/email-change',
+            'public_key' => 'public-key',
+            'auth_token' => 'auth-token',
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->put(route('platform.tenants.update', $tenant), [
+                'name' => $tenant->name,
+                'slug' => $tenant->slug,
+                'custom_domain' => null,
+                'plan' => $tenant->plan,
+                'status' => $tenant->status,
+                'contact_phone' => null,
+                'admin_name' => $owner->name,
+                'admin_email' => 'novo@example.com',
+                'admin_password' => null,
+                'admin_password_confirmation' => null,
+            ])->assertRedirect()
+            ->assertSessionHas('success');
+
+        $owner->refresh();
+        $this->assertSame('novo@example.com', $owner->email);
+        $this->assertNull($owner->email_verified_at);
+        $this->assertNotNull($owner->two_factor_confirmed_at);
+        $this->assertDatabaseMissing('sessions', ['id' => 'owner-email-session']);
+        $this->assertDatabaseMissing('push_subscriptions', ['user_id' => $owner->id]);
+        Notification::assertSentTo($owner, VerifyOwnerEmailNotification::class);
     }
 
     public function test_suspended_tenant_user_cannot_sign_in(): void
