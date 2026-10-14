@@ -76,5 +76,14 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(20)->by($request->ip()),
             ];
         });
+
+        RateLimiter::for('sensitive-admin', function (Request $request) {
+            $userKey = (string) ($request->user()?->id ?? 'guest');
+
+            return [
+                Limit::perHour(3)->by($userKey),
+                Limit::perHour(10)->by($request->ip()),
+            ];
+        });
     }
 }

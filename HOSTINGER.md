@@ -104,7 +104,7 @@ php artisan optimize:clear
 php artisan optimize
 ```
 
-Antes de habilitar a regra, avise os clientes para que tenham um aplicativo autenticador disponível. A ativação gera oito códigos de recuperação, exibidos uma única vez; eles devem ser guardados em cofre separado do dispositivo autenticador. Não desative a exigência como forma de recuperar uma conta: utilize o procedimento administrativo de recuperação aprovado quando ele estiver implantado.
+Antes de habilitar a regra, avise os clientes para que tenham um aplicativo autenticador disponível. A ativação gera oito códigos de recuperação, exibidos uma única vez; eles devem ser guardados em cofre separado do dispositivo autenticador. Não desative a exigência como forma de recuperar uma conta. Se o Proprietário perder o autenticador e os códigos, siga [o procedimento administrativo de recuperação](docs/operacao/RECUPERACAO_MFA.md).
 
 ## Primeiro deploy
 

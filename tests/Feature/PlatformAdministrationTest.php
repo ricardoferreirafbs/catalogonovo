@@ -2,10 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\AuditLog;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\OwnerMfaRecoveredNotification;
+use App\Services\TotpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -84,6 +89,198 @@ class PlatformAdministrationTest extends TestCase
         $this->assertDatabaseMissing('tenants', ['id' => $tenant->id]);
         $this->assertDatabaseMissing('users', ['id' => $owner->id]);
         Storage::disk('uploads')->assertMissing("tenants/{$tenant->id}");
+    }
+
+    public function test_verified_superadmin_can_securely_recover_an_owners_mfa(): void
+    {
+        Notification::fake();
+        $totp = app(TotpService::class);
+        $superAdmin = $this->verifiedSuperAdmin();
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $ownerSecret = $totp->generateSecret();
+        $owner = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'password' => Hash::make('Senha-Cliente2026!'),
+            'two_factor_secret' => $ownerSecret,
+            'two_factor_recovery_codes' => [$totp->hashRecoveryCode('OWNER-2026')],
+            'two_factor_confirmed_at' => now(),
+        ]);
+        $otherUser = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'viewer']);
+        $rememberToken = $owner->remember_token;
+
+        DB::table('sessions')->insert([
+            [
+                'id' => 'owner-session',
+                'user_id' => $owner->id,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'Owner browser',
+                'payload' => 'payload',
+                'last_activity' => now()->timestamp,
+            ],
+            [
+                'id' => 'other-session',
+                'user_id' => $otherUser->id,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'Viewer browser',
+                'payload' => 'payload',
+                'last_activity' => now()->timestamp,
+            ],
+        ]);
+        $owner->pushSubscriptions()->create([
+            'endpoint_hash' => hash('sha256', 'https://push.example/owner'),
+            'endpoint' => 'https://push.example/owner',
+            'public_key' => 'public-key',
+            'auth_token' => 'auth-token',
+        ]);
+
+        $response = $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->post(route('platform.tenants.owner-mfa.recover', [$tenant, $owner]), [
+                'verification_method' => 'confirmed_email_reply',
+                'support_reference' => 'SUP-20261013-001',
+                'owner_email' => $owner->email,
+                'password' => 'password',
+                'code' => $totp->code((string) $superAdmin->two_factor_secret),
+                'acknowledgement' => '1',
+            ]);
+
+        $response->assertRedirect()
+            ->assertSessionHas('success', fn (string $message): bool => str_contains($message, 'Protocolo MFA-'));
+
+        $owner->refresh();
+        $this->assertNull($owner->two_factor_secret);
+        $this->assertNull($owner->two_factor_recovery_codes);
+        $this->assertNull($owner->two_factor_confirmed_at);
+        $this->assertNull($owner->two_factor_last_used_counter);
+        $this->assertNotSame($rememberToken, $owner->remember_token);
+        $this->assertTrue(Hash::check('Senha-Cliente2026!', $owner->password));
+        $this->assertDatabaseMissing('sessions', ['id' => 'owner-session']);
+        $this->assertDatabaseHas('sessions', ['id' => 'other-session']);
+        $this->assertDatabaseMissing('push_subscriptions', ['user_id' => $owner->id]);
+        $this->assertNotNull($superAdmin->fresh()->two_factor_last_used_counter);
+        Notification::assertSentTo($owner, OwnerMfaRecoveredNotification::class);
+
+        $audit = AuditLog::query()->where('event', 'security.owner_mfa_recovered')->firstOrFail();
+        $this->assertSame($owner->id, $audit->metadata['target_user_id']);
+        $this->assertSame('confirmed_email_reply', $audit->metadata['verification_method']);
+        $this->assertSame('SUP-20261013-001', $audit->metadata['support_reference']);
+        $this->assertSame(1, $audit->metadata['sessions_revoked']);
+        $this->assertSame(1, $audit->metadata['push_subscriptions_revoked']);
+        $this->assertTrue($audit->metadata['notification_sent']);
+        $this->assertArrayNotHasKey('password', $audit->metadata);
+        $this->assertArrayNotHasKey('code', $audit->metadata);
+    }
+
+    public function test_owner_mfa_recovery_rejects_wrong_confirmation_without_changing_the_account(): void
+    {
+        Notification::fake();
+        $totp = app(TotpService::class);
+        $superAdmin = $this->verifiedSuperAdmin();
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'two_factor_secret' => $totp->generateSecret(),
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->post(route('platform.tenants.owner-mfa.recover', [$tenant, $owner]), [
+                'verification_method' => 'confirmed_email_reply',
+                'support_reference' => 'SUP-20261013-002',
+                'owner_email' => 'outra-pessoa@example.com',
+                'password' => 'password',
+                'code' => $totp->code((string) $superAdmin->two_factor_secret),
+                'acknowledgement' => '1',
+            ])->assertSessionHasErrors('owner_email');
+
+        $this->assertNotNull($owner->fresh()->two_factor_confirmed_at);
+        $this->assertNull($superAdmin->fresh()->two_factor_last_used_counter);
+        Notification::assertNothingSent();
+        $this->assertDatabaseMissing('audit_logs', ['event' => 'security.owner_mfa_recovered']);
+    }
+
+    public function test_owner_mfa_recovery_rejects_a_reused_superadmin_code(): void
+    {
+        $totp = app(TotpService::class);
+        $superAdmin = $this->verifiedSuperAdmin();
+        $currentCounter = intdiv(time(), 30);
+        $superAdmin->forceFill(['two_factor_last_used_counter' => $currentCounter])->save();
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'two_factor_secret' => $totp->generateSecret(),
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->post(route('platform.tenants.owner-mfa.recover', [$tenant, $owner]), [
+                'verification_method' => 'verified_phone_call',
+                'support_reference' => 'SUP-20261013-003',
+                'owner_email' => $owner->email,
+                'password' => 'password',
+                'code' => $totp->code((string) $superAdmin->two_factor_secret),
+                'acknowledgement' => '1',
+            ])->assertSessionHasErrors('code');
+
+        $this->assertNotNull($owner->fresh()->two_factor_confirmed_at);
+    }
+
+    public function test_owner_mfa_recovery_rejects_the_wrong_superadmin_password(): void
+    {
+        $totp = app(TotpService::class);
+        $superAdmin = $this->verifiedSuperAdmin();
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'role' => 'owner',
+            'two_factor_secret' => $totp->generateSecret(),
+            'two_factor_recovery_codes' => [],
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->post(route('platform.tenants.owner-mfa.recover', [$tenant, $owner]), [
+                'verification_method' => 'contractual_contact',
+                'support_reference' => 'SUP-20261013-004',
+                'owner_email' => $owner->email,
+                'password' => 'senha-incorreta',
+                'code' => $totp->code((string) $superAdmin->two_factor_secret),
+                'acknowledgement' => '1',
+            ])->assertSessionHasErrors('password');
+
+        $this->assertNotNull($owner->fresh()->two_factor_confirmed_at);
+        $this->assertNull($superAdmin->fresh()->two_factor_last_used_counter);
+    }
+
+    public function test_superadmin_cannot_recover_an_owner_through_another_tenant(): void
+    {
+        $superAdmin = $this->verifiedSuperAdmin();
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $otherTenant = Tenant::create(['name' => 'Outro cliente', 'slug' => 'outro-cliente']);
+        $foreignOwner = User::factory()->create(['tenant_id' => $otherTenant->id, 'role' => 'owner']);
+
+        $this->actingAs($superAdmin)
+            ->withSession(['mfa_verified_user_id' => $superAdmin->id])
+            ->post(route('platform.tenants.owner-mfa.recover', [$tenant, $foreignOwner]))
+            ->assertNotFound();
+    }
+
+    public function test_tenant_user_cannot_recover_an_owners_mfa(): void
+    {
+        $tenant = Tenant::create(['name' => 'Cliente', 'slug' => 'cliente']);
+        $owner = User::factory()->create(['tenant_id' => $tenant->id, 'role' => 'owner']);
+
+        $this->actingAs($owner)
+            ->post(route('platform.tenants.owner-mfa.recover', [$tenant, $owner]))
+            ->assertForbidden();
     }
 
     private function verifiedSuperAdmin(): User

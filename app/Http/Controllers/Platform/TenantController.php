@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Notifications\OwnerMfaRecoveredNotification;
+use App\Services\OwnerMfaRecoveryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Throwable;
 
 class TenantController extends Controller
 {
@@ -38,7 +42,11 @@ class TenantController extends Controller
 
     public function create()
     {
-        return view('platform.tenants.form', ['tenant' => new Tenant, 'owner' => new User]);
+        return view('platform.tenants.form', [
+            'tenant' => new Tenant,
+            'owner' => new User,
+            'identityMethods' => OwnerMfaRecoveryService::IDENTITY_METHODS,
+        ]);
     }
 
     public function store(Request $request)
@@ -66,7 +74,11 @@ class TenantController extends Controller
         $tenant->loadCount(['products', 'users']);
         $owner = $tenant->owner()->first() ?? new User;
 
-        return view('platform.tenants.form', compact('tenant', 'owner'));
+        return view('platform.tenants.form', [
+            'tenant' => $tenant,
+            'owner' => $owner,
+            'identityMethods' => OwnerMfaRecoveryService::IDENTITY_METHODS,
+        ]);
     }
 
     public function update(Request $request, Tenant $tenant)
@@ -106,6 +118,90 @@ class TenantController extends Controller
         $message = $tenant->status === 'active' ? 'Empresa ativada.' : 'Empresa suspensa.';
 
         return back()->with('success', $message);
+    }
+
+    public function recoverOwnerMfa(
+        Request $request,
+        Tenant $tenant,
+        User $owner,
+        OwnerMfaRecoveryService $recovery
+    ) {
+        abort_unless($owner->tenant_id === $tenant->id && $owner->role === 'owner', 404);
+
+        $request->merge([
+            'owner_email' => strtolower(trim((string) $request->input('owner_email'))),
+            'support_reference' => trim((string) $request->input('support_reference')),
+        ]);
+
+        $data = $request->validate([
+            'verification_method' => ['required', Rule::in(array_keys(OwnerMfaRecoveryService::IDENTITY_METHODS))],
+            'support_reference' => ['required', 'string', 'max:80', 'regex:/\A[A-Za-z0-9][A-Za-z0-9._-]{5,79}\z/'],
+            'owner_email' => ['required', Rule::in([strtolower($owner->email)])],
+            'password' => ['required', 'current_password'],
+            'code' => ['required', 'digits:6'],
+            'acknowledgement' => ['accepted'],
+        ], [
+            'support_reference.regex' => 'Use uma referência de 6 a 80 caracteres contendo apenas letras, números, ponto, hífen ou sublinhado.',
+            'owner_email.in' => 'Digite exatamente o e-mail atual do Proprietário.',
+            'password.current_password' => 'A senha atual do Superadmin não foi confirmada.',
+            'acknowledgement.accepted' => 'Confirme que a identidade foi validada e que o Proprietário será avisado.',
+        ]);
+
+        $protocol = 'MFA-'.Str::upper(Str::random(12));
+        $operation = DB::transaction(function () use ($request, $tenant, $owner, $recovery, $data, $protocol): array {
+            $result = $recovery->recover($request->user(), $tenant, $owner, $data['code']);
+            $audit = AuditLog::create([
+                'actor_user_id' => $request->user()->id,
+                'tenant_id' => $tenant->id,
+                'event' => 'security.owner_mfa_recovered',
+                'method' => $request->method(),
+                'path' => Str::limit($request->path(), 500, ''),
+                'status' => 200,
+                'ip_address' => $request->ip(),
+                'user_agent' => Str::limit((string) $request->userAgent(), 500, ''),
+                'metadata' => [
+                    'outcome' => 'success',
+                    'protocol' => $protocol,
+                    'target_user_id' => $result['owner']->id,
+                    'verification_method' => $data['verification_method'],
+                    'support_reference' => $data['support_reference'],
+                    'sessions_revoked' => $result['sessions_revoked'],
+                    'push_subscriptions_revoked' => $result['push_subscriptions_revoked'],
+                    'notification_sent' => null,
+                ],
+            ]);
+
+            return ['result' => $result, 'audit' => $audit];
+        });
+
+        $result = $operation['result'];
+        $audit = $operation['audit'];
+        $notificationSent = true;
+
+        try {
+            $result['owner']->notify(new OwnerMfaRecoveredNotification($tenant->name, $protocol));
+        } catch (Throwable $exception) {
+            report($exception);
+            $notificationSent = false;
+        }
+
+        $auditMetadata = $audit->metadata;
+        $auditMetadata['notification_sent'] = $notificationSent;
+        $audit->update(['metadata' => $auditMetadata]);
+
+        $response = back()->with(
+            'success',
+            "MFA do Proprietário redefinido. Protocolo {$protocol}. No próximo acesso, um novo MFA será obrigatório."
+        );
+
+        if (! $notificationSent) {
+            $response->with(
+                'warning',
+                "A recuperação foi concluída, mas o aviso por e-mail falhou. Registre a falha no atendimento {$protocol}."
+            );
+        }
+
+        return $response;
     }
 
     public function destroy(Request $request, Tenant $tenant)

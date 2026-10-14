@@ -36,6 +36,27 @@
                     @if($tenant->status === 'active' && $tenant->custom_domain)<a class="secondary-button full-button" href="{{ $tenant->catalogUrl() }}" target="_blank" rel="noopener">Abrir catálogo ↗</a>@endif
                     <form action="{{ route('platform.tenants.status', $tenant) }}" method="post">@csrf @method('patch')<button class="secondary-button full-button" type="submit">{{ $tenant->status === 'active' ? 'Suspender empresa' : 'Reativar empresa' }}</button></form>
                 </section>
+                <section class="panel-card recovery-admin-card">
+                    <p class="eyebrow">Recuperação de acesso</p>
+                    <h2>Redefinir MFA do Proprietário</h2>
+                    @if($owner->exists && $owner->two_factor_confirmed_at)
+                        <p>Use somente após validar a identidade de <strong>{{ $owner->name }}</strong>. A senha será mantida, mas sessões, códigos MFA, recuperações de senha pendentes e assinaturas push serão revogados.</p>
+                        <form action="{{ route('platform.tenants.owner-mfa.recover', [$tenant, $owner]) }}" method="post" class="stack-form">
+                            @csrf
+                            <label>Método de validação<select name="verification_method" required><option value="">Selecione</option>@foreach($identityMethods as $value => $label)<option value="{{ $value }}" @selected(old('verification_method') === $value)>{{ $label }}</option>@endforeach</select></label>
+                            <label>Referência do atendimento<input name="support_reference" required minlength="6" maxlength="80" pattern="[A-Za-z0-9][A-Za-z0-9._-]{5,79}" value="{{ old('support_reference') }}" placeholder="SUP-20261013-001" autocomplete="off"></label>
+                            <label>Confirme o e-mail <strong>{{ $owner->email }}</strong><input name="owner_email" type="email" required autocomplete="off" value="{{ old('owner_email') }}"></label>
+                            <label>Sua senha atual<input name="password" type="password" required autocomplete="current-password"></label>
+                            <label>Novo código do seu autenticador<input name="code" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="6" required></label>
+                            <label class="check-label"><input type="checkbox" name="acknowledgement" value="1" required> Confirmo que validei a identidade do Proprietário e que ele será avisado da recuperação.</label>
+                            <button type="submit" class="danger-button">Redefinir MFA e encerrar acessos</button>
+                        </form>
+                    @elseif($owner->exists)
+                        <p>Este Proprietário ainda não possui MFA ativo. No próximo acesso, a configuração obrigatória será apresentada automaticamente.</p>
+                    @else
+                        <p>Não existe uma conta proprietária vinculada a esta empresa.</p>
+                    @endif
+                </section>
                 <section class="panel-card danger-zone">
                     <p class="eyebrow">Zona de perigo</p><h2>Excluir empresa</h2><p>Remove usuários, catálogo, produtos e imagens permanentemente.</p>
                     <form action="{{ route('platform.tenants.destroy', $tenant) }}" method="post">@csrf @method('delete')<label>Digite <strong>{{ $tenant->slug }}</strong><input name="confirmation" required autocomplete="off"></label><button type="submit" class="danger-button">Excluir definitivamente</button></form>

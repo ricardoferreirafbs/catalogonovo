@@ -130,6 +130,9 @@ Route::prefix('plataforma')->name('platform.')->middleware(['auth', 'superadmin'
     Route::patch('/comunicacoes/{communication}/encerrar', [PlatformCommunicationController::class, 'close'])->middleware('throttle:secure-communications')->name('communications.close');
     Route::post('/push/assinaturas', [PushSubscriptionController::class, 'store'])->middleware('throttle:secure-communications')->name('push.store');
     Route::delete('/push/assinaturas', [PushSubscriptionController::class, 'destroy'])->middleware('throttle:secure-communications')->name('push.destroy');
+    Route::post('/empresas/{tenant}/proprietarios/{owner}/recuperar-mfa', [TenantController::class, 'recoverOwnerMfa'])
+        ->middleware('throttle:sensitive-admin')
+        ->name('tenants.owner-mfa.recover');
     Route::prefix('backups')->name('backups.')->group(function () {
         Route::get('/', [PlatformBackupController::class, 'index'])->name('index');
         Route::post('/', [PlatformBackupController::class, 'store'])->middleware('throttle:backup-operations')->name('store');
